@@ -3,6 +3,7 @@
 
 using System;
 using System.Data.SQLite;
+using System.IO;
 
 namespace SQLiteSamples
 {
@@ -20,9 +21,26 @@ namespace SQLiteSamples
         {
             createNewDatabase();
             connectToDatabase();
-            createTable();
-            fillTable();
-            printHighscores();
+            UseStandardDB();
+            Console.ReadLine();
+            //createTable();
+            //fillTable();
+            //printHighscores();
+        }
+
+        void UseStandardDB()
+        {
+            StreamReader reader = new StreamReader("autompg.sql");
+            string line;
+            do
+            {
+                line = reader.ReadLine();
+                SQLiteCommand command = new SQLiteCommand(line, m_dbConnection);
+                command.ExecuteNonQuery();
+                Console.WriteLine("executed: " + line);
+            }
+            while (line != "");
+            
         }
 
         // Creates an empty database file
