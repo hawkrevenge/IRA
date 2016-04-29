@@ -1,24 +1,4 @@
-
-
-
-CREATE TABLE autompg (
-    id integer NOT NULL,
-    mpg real,
-    cylinders integer,
-    displacement real,
-    horsepower real,
-    weight real,
-    acceleration real,
-    model_year integer,
-    origin integer,
-    brand text, 
-    model text,
-    type text,
-    PRIMARY KEY (id)
-);
-
-
-
+CREATE TABLE autompg (id integer NOT NULL, mpg real, cylinders integer, displacement real, horsepower real, weight real, acceleration real, model_year integer, origin integer, brand text, model text, type text, PRIMARY KEY (id) );
 INSERT INTO autompg VALUES (1, 18, 8, 307, 130, 3504, 12, 70, 1, 'chevrolet', 'chevelle malibu', 'sedan');
 INSERT INTO autompg VALUES (2, 15, 8, 350, 165, 3693, 11.5, 70, 1, 'buick', 'skylark 320', 'sedan');
 INSERT INTO autompg VALUES (3, 18, 8, 318, 150, 3436, 11, 70, 1, 'plymouth', 'satellite', 'coupe');

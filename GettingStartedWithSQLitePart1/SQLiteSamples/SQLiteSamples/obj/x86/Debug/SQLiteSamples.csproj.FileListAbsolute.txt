@@ -1,0 +1,7 @@
+C:\Users\Lukas\Desktop\School\DATA\IRA\GettingStartedWithSQLitePart1\SQLiteSamples\SQLiteSamples\bin\Debug\SQLiteSamples.exe
+C:\Users\Lukas\Desktop\School\DATA\IRA\GettingStartedWithSQLitePart1\SQLiteSamples\SQLiteSamples\bin\Debug\SQLiteSamples.pdb
+C:\Users\Lukas\Desktop\School\DATA\IRA\GettingStartedWithSQLitePart1\SQLiteSamples\SQLiteSamples\bin\Debug\System.Data.SQLite.dll
+C:\Users\Lukas\Desktop\School\DATA\IRA\GettingStartedWithSQLitePart1\SQLiteSamples\SQLiteSamples\bin\Debug\System.Data.SQLite.xml
+C:\Users\Lukas\Desktop\School\DATA\IRA\GettingStartedWithSQLitePart1\SQLiteSamples\SQLiteSamples\obj\x86\Debug\SQLiteSamples.csprojResolveAssemblyReference.cache
+C:\Users\Lukas\Desktop\School\DATA\IRA\GettingStartedWithSQLitePart1\SQLiteSamples\SQLiteSamples\obj\x86\Debug\SQLiteSamples.exe
+C:\Users\Lukas\Desktop\School\DATA\IRA\GettingStartedWithSQLitePart1\SQLiteSamples\SQLiteSamples\obj\x86\Debug\SQLiteSamples.pdb
