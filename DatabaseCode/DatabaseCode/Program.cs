@@ -37,6 +37,7 @@ namespace DatabaseCode
                 if (input == "rebuild")
                 {
                     //TODO add build metaDatabase
+                    disconnectDatabase();
                     createNewDatabase();
                     connectToDatabase();
                     UseStandardDB();
@@ -83,6 +84,11 @@ namespace DatabaseCode
         {
             m_dbConnection = new SQLiteConnection("Data Source=MyDatabase.sqlite;Version=3;");
             m_dbConnection.Open();
+        }
+
+        void disconnectDatabase()
+        {
+            m_dbConnection.Close();
         }
 
         // Creates a table named 'highscores' with two columns: name (a string of max 20 characters) and score (an int)
