@@ -26,7 +26,16 @@ namespace DatabaseCode
             else
             {
                 //TODO add build metaDatabase
-                createNewDatabase();
+                createNewDatabase("MyDatabase.sqlite");
+                connectToDatabase();
+                UseStandardDB();
+            }
+            if (File.Exists(Directory.GetCurrentDirectory() + "\\MyMetabase.sqlite"))
+                connectToDatabase();
+            else
+            {
+                //TODO add build metaDatabase
+                createNewDatabase("MyMetabase.sqlite");
                 connectToDatabase();
                 UseStandardDB();
             }
@@ -34,14 +43,15 @@ namespace DatabaseCode
             {
                 string input;
                 input = Console.ReadLine();
-                if (input == "rebuild")
+                if (input == "rebuildData")
                 {
                     //TODO add build metaDatabase
                     disconnectDatabase();
-                    createNewDatabase();
+                    createNewDatabase("MyDatabase.sqlite");
                     connectToDatabase();
                     UseStandardDB();
                 }
+
                 else if (input == "quit")
                     break;
                 else
@@ -49,6 +59,7 @@ namespace DatabaseCode
 
                     //ingevoerde query acties
                 }
+
 
             }
 
@@ -74,9 +85,9 @@ namespace DatabaseCode
         }
 
         // Creates an empty database file
-        void createNewDatabase()
+        void createNewDatabase(string name)
         {
-            SQLiteConnection.CreateFile("MyDatabase.sqlite");
+            SQLiteConnection.CreateFile(name);
         }
 
         // Creates a connection with our database file.
