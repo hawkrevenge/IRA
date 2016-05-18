@@ -13,7 +13,7 @@ namespace DatabaseCode
     {
         // Holds our connection with the database
         SQLiteConnection m_dbConnection;
-
+        SQLiteConnection m_mbConnection;
         static void Main(string[] args)
         {
             Program p = new Program();
@@ -28,7 +28,7 @@ namespace DatabaseCode
                 //TODO add build metaDatabase
                 createNewDatabase("MyDatabase.sqlite");
                 connectToDatabase();
-                UseStandardDB();
+                UseStandardDB(m_dbConnection, "autompg.sql");
             }
             if (File.Exists(Directory.GetCurrentDirectory() + "\\MyMetabase.sqlite"))
                 connectToDatabase();
@@ -36,8 +36,8 @@ namespace DatabaseCode
             {
                 //TODO add build metaDatabase
                 createNewDatabase("MyMetabase.sqlite");
-                connectToDatabase();
-                UseStandardDB();
+                connectToMetabase();
+                UseStandardDB(m_mbConnection, "autompg.sql");
             }
             while (true)
             {
@@ -50,7 +50,7 @@ namespace DatabaseCode
                     disconnectDatabase();
                     createNewDatabase("MyDatabase.sqlite");
                     connectToDatabase();
-                    UseStandardDB();
+                    UseStandardDB(m_dbConnection, "autompg.sql");
                 }
 
                 else if (input == "quit")
@@ -72,14 +72,14 @@ namespace DatabaseCode
             //printHighscores();
         }
 
-        void UseStandardDB()
+        void UseStandardDB(SQLiteConnection s, string fileName)
         {
-            StreamReader reader = new StreamReader("autompg.sql");
+            StreamReader reader = new StreamReader(fileName);
             string line;
             do
             {
                 line = reader.ReadLine();
-                SQLiteCommand command = new SQLiteCommand(line, m_dbConnection);
+                SQLiteCommand command = new SQLiteCommand(line, s);
                 command.ExecuteNonQuery();
                 Console.WriteLine("executed: " + line);
             }
@@ -99,7 +99,11 @@ namespace DatabaseCode
             m_dbConnection = new SQLiteConnection("Data Source=MyDatabase.sqlite;Version=3;");
             m_dbConnection.Open();
         }
-
+        void connectToMetabase()
+        {
+            m_mbConnection = new SQLiteConnection("Data Source=MyMetabase.sqlite;Version=3;");
+            m_mbConnection.Open();
+        }
         void disconnectDatabase()
         {
             m_dbConnection.Close();
