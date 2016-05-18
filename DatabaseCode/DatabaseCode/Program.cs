@@ -45,6 +45,7 @@ namespace DatabaseCode
                 input = Console.ReadLine();
                 if (input == "rebuildData")
                 {
+                    Console.WriteLine("rebuilding");
                     //TODO add build metaDatabase
                     disconnectDatabase();
                     createNewDatabase("MyDatabase.sqlite");
@@ -53,7 +54,11 @@ namespace DatabaseCode
                 }
 
                 else if (input == "quit")
+                {
+                    Console.WriteLine("quitting");
+                    disconnectDatabase();
                     break;
+                }
                 else
                 {
 
@@ -62,8 +67,6 @@ namespace DatabaseCode
 
 
             }
-
-            Console.ReadLine();
             //createTable();
             //fillTable();
             //printHighscores();
@@ -100,6 +103,7 @@ namespace DatabaseCode
         void disconnectDatabase()
         {
             m_dbConnection.Close();
+            m_dbConnection.Shutdown();
         }
 
         // Creates a table named 'highscores' with two columns: name (a string of max 20 characters) and score (an int)
