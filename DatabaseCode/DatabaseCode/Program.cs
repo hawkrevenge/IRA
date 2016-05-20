@@ -14,6 +14,8 @@ namespace DatabaseCode
         // Holds our connection with the database
         SQLiteConnection m_dbConnection;
         SQLiteConnection m_mbConnection;
+        Metabase mb;
+
         static void Main(string[] args)
         {
             Program p = new Program();
@@ -29,7 +31,11 @@ namespace DatabaseCode
             if (File.Exists(Directory.GetCurrentDirectory() + "\\MyMetabase.sqlite"))
                 Connect(ref m_mbConnection, "MyMetabase.sqlite");
             else
+            {
                 Build(ref m_mbConnection, "MyDatabase.sqlite", "autompg.sql");
+                mb = new Metabase(m_mbConnection);
+                mb.InsertAll();
+            }
 
 
 
@@ -48,13 +54,15 @@ namespace DatabaseCode
                     Console.WriteLine("rebuilding metabase");
                     Disconnect(ref m_mbConnection);
                     Build(ref m_mbConnection, "MyMetabase.sqlite", "autompg.sql");
+                    mb = new Metabase(m_mbConnection);
+                    mb.InsertAll();
                 }
 
                 else if (input == "quit")
                 {
                     Console.WriteLine("quitting");
                     DisconnectAll();
-                    break;
+                    return;
                 }
                 else
                 {
