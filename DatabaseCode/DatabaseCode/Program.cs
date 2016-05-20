@@ -27,7 +27,6 @@ namespace DatabaseCode
                 Connect(ref m_dbConnection, "MyDatabase.sqlite");
             else
                 Build(ref m_dbConnection, "MyDatabase.sqlite", "autompg.sql");
-
             if (File.Exists(Directory.GetCurrentDirectory() + "\\MyMetabase.sqlite"))
                 Connect(ref m_mbConnection, "MyMetabase.sqlite");
             else
