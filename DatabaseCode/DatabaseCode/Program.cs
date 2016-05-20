@@ -31,12 +31,13 @@ namespace DatabaseCode
                 Connect(ref m_mbConnection, "MyMetabase.sqlite");
             else
             {
-                Build(ref m_mbConnection, "MyDatabase.sqlite", "autompg.sql");
+                Build(ref m_mbConnection, "MyDatabase.sqlite", "meta.sql");
                 mb = new Metabase(m_mbConnection);
                 mb.InsertAll();
             }
 
-
+            mb = new Metabase(m_mbConnection);
+            mb.InsertAll();
 
             while (true)
             {
@@ -52,7 +53,7 @@ namespace DatabaseCode
                 {
                     Console.WriteLine("rebuilding metabase");
                     Disconnect(ref m_mbConnection);
-                    Build(ref m_mbConnection, "MyMetabase.sqlite", "autompg.sql");
+                    Build(ref m_mbConnection, "MyMetabase.sqlite", "meta.sql");
                     mb = new Metabase(m_mbConnection);
                     mb.InsertAll();
                 }

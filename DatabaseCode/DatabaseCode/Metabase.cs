@@ -11,6 +11,7 @@ namespace DatabaseCode
     class Metabase
     {
         public static Metabase instance;
+        static String[] tables = { "mpg", "cylinders", "displacement", "horsepower", "weight", "acceleration", "model_year", "origin", "brand", "model", "type" };
 
         SQLiteConnection m_mbConnection;
 
@@ -24,7 +25,11 @@ namespace DatabaseCode
         {
             SQLiteCommand command = new SQLiteCommand(s, m_mbConnection);
             SQLiteDataReader reader = command.ExecuteReader();
-            reader.GetBoolean(1);
+            while (reader.Read())
+            {
+                Console.WriteLine(reader.GetInt32(0));
+                //Console.WriteLine(reader.GetString(0));
+            }
         }
 
         public void InsertAll()
@@ -34,7 +39,9 @@ namespace DatabaseCode
 
         public void InsertQF()
         {
-            ExecuteCommand("SELECT name FROM sqlite_master WHERE type=\'table\'");
+            //ExecuteCommand("SELECT name FROM sqlite_temp_master WHERE type=\'table\'");
+            //ExecuteCommand("SELECT name FROM sqlite_master \nWHERE type IN('table', 'view') AND name NOT LIKE 'sqlite_%'\nUNION ALL\nSELECT name FROM sqlite_temp_master\nWHERE type IN('table', 'view')\nORDER BY 1");
+            ExecuteCommand("SELECT * FROM mpg");
         }
     }
 }
