@@ -22,41 +22,38 @@ namespace DatabaseCode
         public Program()
         {
             if (File.Exists(Directory.GetCurrentDirectory() + "\\MyDatabase.sqlite"))
-                connectToDatabase();
+                Connect(ref m_dbConnection, "MyDatabase.sqlite");
             else
-            {
-                //TODO add build metaDatabase
-                createNewDatabase("MyDatabase.sqlite");
-                connectToDatabase();
-                UseStandardDB(m_dbConnection, "autompg.sql");
-            }
+                Build(ref m_dbConnection, "MyDatabase.sqlite", "autompg.sql");
+
             if (File.Exists(Directory.GetCurrentDirectory() + "\\MyMetabase.sqlite"))
-                connectToDatabase();
+                Connect(ref m_mbConnection, "MyMetabase.sqlite");
             else
-            {
-                //TODO add build metaDatabase
-                createNewDatabase("MyMetabase.sqlite");
-                connectToMetabase();
-                UseStandardDB(m_mbConnection, "autompg.sql");
-            }
+                Build(ref m_mbConnection, "MyDatabase.sqlite", "autompg.sql");
+
+
+
             while (true)
             {
                 string input;
                 input = Console.ReadLine();
                 if (input == "rebuildData")
                 {
-                    Console.WriteLine("rebuilding");
-                    //TODO add build metaDatabase
-                    disconnectDatabase();
-                    createNewDatabase("MyDatabase.sqlite");
-                    connectToDatabase();
-                    UseStandardDB(m_dbConnection, "autompg.sql");
+                    Console.WriteLine("rebuilding database");
+                    Disconnect(ref m_dbConnection);
+                    Build(ref m_dbConnection, "MyDatabase.sqlite", "autompg.sql");
+                }
+                else if (input == "rebuildMeta")
+                {
+                    Console.WriteLine("rebuilding metabase");
+                    Disconnect(ref m_mbConnection);
+                    Build(ref m_mbConnection, "MyMetabase.sqlite", "autompg.sql");
                 }
 
                 else if (input == "quit")
                 {
                     Console.WriteLine("quitting");
-                    disconnectDatabase();
+                    DisconnectAll();
                     break;
                 }
                 else
@@ -67,9 +64,6 @@ namespace DatabaseCode
 
 
             }
-            //createTable();
-            //fillTable();
-            //printHighscores();
         }
 
         void UseStandardDB(SQLiteConnection s, string fileName)
@@ -93,55 +87,29 @@ namespace DatabaseCode
             SQLiteConnection.CreateFile(name);
         }
 
-        // Creates a connection with our database file.
-        void connectToDatabase()
+        void Connect(ref SQLiteConnection connection, String fileLocation)
         {
-            m_dbConnection = new SQLiteConnection("Data Source=MyDatabase.sqlite;Version=3;");
-            m_dbConnection.Open();
-        }
-        void connectToMetabase()
-        {
-            m_mbConnection = new SQLiteConnection("Data Source=MyMetabase.sqlite;Version=3;");
-            m_mbConnection.Open();
-        }
-        void disconnectDatabase()
-        {
-            m_dbConnection.Close();
-            m_dbConnection.Shutdown();
+            Console.WriteLine("Connecting to DB: "+fileLocation);
+            connection = new SQLiteConnection("Data Source="+ fileLocation + ";Version=3;");
+            connection.Open();
         }
 
-        // Creates a table named 'highscores' with two columns: name (a string of max 20 characters) and score (an int)
-        void createTable()
+        void Build(ref SQLiteConnection connection, String databaseLocation, String SQLFile)
         {
-            string sql = "create table highscores (name varchar(20), score int)";
-            SQLiteCommand command = new SQLiteCommand(sql, m_dbConnection);
-            command.ExecuteNonQuery();
+            createNewDatabase(databaseLocation);
+            Connect(ref connection, databaseLocation);
+            UseStandardDB(connection, SQLFile);
         }
 
-        // Inserts some values in the highscores table.
-        // As you can see, there is quite some duplicate code here, we'll solve this in part two.
-        void fillTable()
+        void Disconnect(ref SQLiteConnection connection)
         {
-            string sql = "insert into highscores (name, score) values ('Me', 3000)";
-            SQLiteCommand command = new SQLiteCommand(sql, m_dbConnection);
-            command.ExecuteNonQuery();
-            sql = "insert into highscores (name, score) values ('Myself', 6000)";
-            command = new SQLiteCommand(sql, m_dbConnection);
-            command.ExecuteNonQuery();
-            sql = "insert into highscores (name, score) values ('And I', 9001)";
-            command = new SQLiteCommand(sql, m_dbConnection);
-            command.ExecuteNonQuery();
+            connection.Close();
         }
 
-        // Writes the highscores to the console sorted on score in descending order.
-        void printHighscores()
+        void DisconnectAll()
         {
-            string sql = "select * from highscores order by score desc";
-            SQLiteCommand command = new SQLiteCommand(sql, m_dbConnection);
-            SQLiteDataReader reader = command.ExecuteReader();
-            while (reader.Read())
-                Console.WriteLine("Name: " + reader["name"] + "\tScore: " + reader["score"]);
-            Console.ReadLine();
+            Disconnect(ref m_dbConnection);
+            Disconnect(ref m_mbConnection);
         }
     }
 }
