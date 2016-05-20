@@ -25,11 +25,10 @@ namespace DatabaseCode
                 Connect(ref m_dbConnection, "MyDatabase.sqlite");
             else
                 Build(ref m_dbConnection, "MyDatabase.sqlite", "autompg.sql");
-
             if (File.Exists(Directory.GetCurrentDirectory() + "\\MyMetabase.sqlite"))
                 Connect(ref m_mbConnection, "MyMetabase.sqlite");
             else
-                Build(ref m_mbConnection, "MyDatabase.sqlite", "autompg.sql");
+                Build(ref m_mbConnection, "MyDatabase.sqlite", "Meta.sql");
 
 
 
@@ -47,7 +46,7 @@ namespace DatabaseCode
                 {
                     Console.WriteLine("rebuilding metabase");
                     Disconnect(ref m_mbConnection);
-                    Build(ref m_mbConnection, "MyMetabase.sqlite", "autompg.sql");
+                    Build(ref m_mbConnection, "MyMetabase.sqlite", "Meta.sql");
                 }
 
                 else if (input == "quit")
