@@ -32,11 +32,11 @@ namespace DatabaseCode
             else
             {
                 Build(ref m_mbConnection, "MyDatabase.sqlite", "meta.sql");
-                mb = new Metabase(m_mbConnection, m_dbConnection);
+                mb = new Metabase(m_mbConnection);
                 mb.InsertAll();
             }
 
-            mb = new Metabase(m_mbConnection, m_dbConnection);
+            mb = new Metabase(m_mbConnection);
             mb.InsertAll();
 
             while (true)
@@ -54,7 +54,7 @@ namespace DatabaseCode
                     Console.WriteLine("rebuilding metabase");
                     Disconnect(ref m_mbConnection);
                     Build(ref m_mbConnection, "MyMetabase.sqlite", "meta.sql");
-                    mb = new Metabase(m_mbConnection, m_dbConnection);
+                    mb = new Metabase(m_mbConnection);
                     mb.InsertAll();
                 }
 
@@ -78,14 +78,13 @@ namespace DatabaseCode
         {
             StreamReader reader = new StreamReader(fileName);
             string line;
-            do
+            while ((line = reader.ReadLine()) != "" && line != null)
             {
                 line = reader.ReadLine();
                 SQLiteCommand command = new SQLiteCommand(line, s);
                 command.ExecuteNonQuery();
                 Console.WriteLine("executed: " + line);
             }
-            while (line != "");
 
         }
 
