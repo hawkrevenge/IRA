@@ -44,24 +44,24 @@ namespace DatabaseCode
             Console.WriteLine("Calculating: QF-Values");
             Dictionary<string,Dictionary<string, int>> QFDictionary = new Dictionary<string, Dictionary<string, int>>();
             StreamReader reader = new StreamReader("workload.txt");
-            char[] trimAND = new char[2] { ' ', '\'' };
-
             reader.ReadLine(); reader.ReadLine();
-            string line;
-            int n;
-            string[] splitted;
-            int max = 0;
+            string line; int n; string[] splitted; // predefined variables
+            Dictionary<string, int> max = new Dictionary<string, int>();
             while((line = reader.ReadLine()) != ""&& line != null)
             {
+                // splits the amounnt and the query
                 splitted = Regex.Split(line, " times: ");
-
                 n = int.Parse(splitted[0]);
+                //splits each attribute
                 splitted = Regex.Split(splitted[1], " WHERE ");
                 splitted = Regex.Split(splitted[1], " AND ");
+
                 foreach (string s in splitted)
                 {
+                    // splits the special IN case
                     if (s.Contains("IN"))
                     {
+                        
                         string[] tmps = Regex.Split(StringTrim(s), "IN" );
                         string key = tmps[0];
                         foreach (string s2 in tmps[1].Split(','))
@@ -71,8 +71,10 @@ namespace DatabaseCode
                             if (!QFDictionary[key].ContainsKey(s2))
                                 QFDictionary[key].Add(s2, 0);
                             QFDictionary[key][s2] += n;
-                            if (QFDictionary[key][s2] > max)
-                                max = QFDictionary[key][s2];
+                            if (!max.ContainsKey(key))
+                                max.Add(key, QFDictionary[key][s2]);
+                            else if (QFDictionary[key][s2] > max[key])
+                                max[key] = QFDictionary[key][s2];
                         }
                     }
                     else
@@ -83,13 +85,39 @@ namespace DatabaseCode
                         if (!QFDictionary[tmps[0]].ContainsKey(tmps[1]))
                             QFDictionary[tmps[0]].Add(tmps[1], 0);
                         QFDictionary[tmps[0]][tmps[1]] += n;
-                        if (QFDictionary[tmps[0]][tmps[1]] > max)
-                            max = QFDictionary[tmps[0]][tmps[1]];
+                        if (!max.ContainsKey(tmps[0]))
+                            max.Add(tmps[0], QFDictionary[tmps[0]][tmps[1]]);
+                        else if (QFDictionary[tmps[0]][tmps[1]] > max[tmps[0]])
+                            max[tmps[0]] = QFDictionary[tmps[0]][tmps[1]];
                     }
                 }
             }
+            foreach (KeyValuePair<string, Dictionary<string, int>> PairSD in QFDictionary)
+            {
+                int maxValue = max[PairSD.Key];
+                int Counter = 1;
+                if (PairSD.Key == "brand" || PairSD.Key == "model" || PairSD.Key == "type")
+                    foreach (KeyValuePair<string, int> PairSI in PairSD.Value)
+                    {
+
+                        string commandstring = "INSERT INTO " + PairSD.Key + " VALUES (\'" + PairSI.Key + "\', " + (float)PairSI.Value / (float)maxValue + ", 'IDFVALUE')";
+                        Console.WriteLine("executing: " + commandstring);
+                        ExecuteCommand(commandstring, m_mbConnection);
+                    }
+                else
+                    foreach (KeyValuePair<string, int> PairSI in PairSD.Value)
+                    {
+
+                        string commandstring = "INSERT INTO " + PairSD.Key + " VALUES (" + PairSI.Key + ", " + (float)PairSI.Value / (float)maxValue + ", 'IDFVALUE')";
+                        Console.WriteLine("executing: " + commandstring);
+                        ExecuteCommand(commandstring, m_mbConnection);
+                    }
+
+            }
+
             //ExecuteCommand("SELECT name FROM sqlite_temp_master WHERE type=\'table\'");
-            //ExecuteCommand("SELECT name FROM sqlite_master \nWHERE type IN('table', 'view') AND name NOT LIKE 'sqlite_%'\nUNION ALL\nSELECT name FROM sqlite_temp_master\nWHERE type IN('table', 'view')\nORDER BY 1");
+            //ExecuteCommand("SELECT name FROM sqlite_master \nWHERE type IN('table', 'view') AND name NOT LIKE 'sqlite_%'\nUNION ALL\nSELECT --->
+            // ---> name FROM sqlite_temp_master\nWHERE type IN('table', 'view')\nORDER BY 1");
             Console.WriteLine("executed: QF-Values");
         }
 

@@ -31,11 +31,11 @@ namespace DatabaseCode
                 Connect(ref m_mbConnection, "MyMetabase.sqlite");
             else
             {
-                Build(ref m_mbConnection, "MyDatabase.sqlite", "meta.sql");
+                Build(ref m_mbConnection, "MyMetabase.sqlite", "meta.sql");
                 mb = new Metabase(m_mbConnection);
                 mb.InsertAll();
             }
-
+            Build(ref m_mbConnection, "MyMetabase.sqlite", "meta.sql");
             mb = new Metabase(m_mbConnection);
             mb.InsertAll();
 
@@ -80,7 +80,6 @@ namespace DatabaseCode
             string line;
             while ((line = reader.ReadLine()) != "" && line != null)
             {
-                line = reader.ReadLine();
                 SQLiteCommand command = new SQLiteCommand(line, s);
                 command.ExecuteNonQuery();
                 Console.WriteLine("executed: " + line);
@@ -103,6 +102,7 @@ namespace DatabaseCode
 
         void Build(ref SQLiteConnection connection, String databaseLocation, String SQLFile)
         {
+            Disconnect(ref connection);
             createNewDatabase(databaseLocation);
             Connect(ref connection, databaseLocation);
             UseStandardDB(connection, SQLFile);
