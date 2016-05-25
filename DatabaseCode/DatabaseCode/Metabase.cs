@@ -25,12 +25,13 @@ namespace DatabaseCode
         private void ExecuteCommand(String s, SQLiteConnection connection)
         {
             SQLiteCommand command = new SQLiteCommand(s, connection);
-            SQLiteDataReader reader = command.ExecuteReader();
-            while (reader.Read())
-            {
-                Console.WriteLine(reader.GetFloat(0));
-                //Console.WriteLine(reader.GetString(0));
-            }
+            command.ExecuteNonQuery();
+            //SQLiteDataReader reader = command.ExecuteReader();
+            //while (reader.Read())
+            //{
+            //    Console.WriteLine(reader.GetFloat(0));
+            //    //Console.WriteLine(reader.GetString(0));
+            //}
         }
 
         public void InsertAll()
