@@ -13,6 +13,7 @@ namespace DatabaseCode
     {
         public static Metabase instance;
         static String[] tables = { "mpg", "cylinders", "displacement", "horsepower", "weight", "acceleration", "model_year", "origin", "brand", "model", "type" };
+        Dictionary<string, Dictionary<object, Tuple<double, double, double>>> localDictionary;
 
         SQLiteConnection m_mbConnection;
 
@@ -20,6 +21,37 @@ namespace DatabaseCode
         {
             instance = this;
             m_mbConnection = connection;
+            localDictionary = new Dictionary<string, Dictionary<object, Tuple<double, double, double>>>();
+            for (int i=0; i<tables.Length; i++)
+            {
+                localDictionary[tables[i]] = new Dictionary<object, Tuple<double, double, double>>();
+            }
+        }
+
+        private void EditTupleInDictionary(string table, object key, double value, int index)
+        {
+            Dictionary<object, Tuple<double, double, double>> tableDict = localDictionary[table];
+            if (tableDict.ContainsKey(key))
+            {
+                tableDict[key] = AddValueToTuple(tableDict[key], value, index);
+            }
+            else
+            {
+                tableDict[key] = new Tuple<double, double, double>(
+                    index == 0 ? value : 0,
+                    index == 1 ? value : 0,
+                    index == 2 ? value : 0
+                );
+            }
+        }
+
+        private Tuple<double, double, double> AddValueToTuple(Tuple<double, double, double> tuple, double value, int index)
+        {
+            return new Tuple<double, double, double>(
+                index == 0 ? value : tuple.Item1,
+                index == 1 ? value : tuple.Item2,
+                index == 2 ? value : tuple.Item3
+            );
         }
 
         private void ExecuteCommand(String s, SQLiteConnection connection)
@@ -99,14 +131,16 @@ namespace DatabaseCode
 
                 foreach (KeyValuePair<string, int> PairSI in PairSD.Value)
                 {
-                    string commandstring;
-                    if (PairSD.Key == "brand" || PairSD.Key == "model" || PairSD.Key == "type")
-                        commandstring = "INSERT INTO " + PairSD.Key + " VALUES (" + PairSI.Key + ", " + (float)PairSI.Value / (float)maxValue + ", 'IDFVALUE')";
-                    else
-                        commandstring = "INSERT INTO " + PairSD.Key + " VALUES (\'" + PairSI.Key + "\', " + (float)PairSI.Value / (float)maxValue + ", 'IDFVALUE')";
+                    //string commandstring;
+                    //if (PairSD.Key == "brand" || PairSD.Key == "model" || PairSD.Key == "type")
+                    //    commandstring = "INSERT INTO " + PairSD.Key + " VALUES (" + PairSI.Key + ", " + (float)PairSI.Value / (float)maxValue + ", 'IDFVALUE')";
+                    //else
+                    //    commandstring = "INSERT INTO " + PairSD.Key + " VALUES (\'" + PairSI.Key + "\', " + (float)PairSI.Value / (float)maxValue + ", 'IDFVALUE')";
 
-                    Console.WriteLine("executing: " + commandstring);
-                    ExecuteCommand(commandstring, m_mbConnection);
+                    //Console.WriteLine("executing: " + commandstring);
+                    //ExecuteCommand(commandstring, m_mbConnection);
+
+                    EditTupleInDictionary(PairSD.Key, PairSI.Key, PairSI.Value, 0);
                 }
             }
 
