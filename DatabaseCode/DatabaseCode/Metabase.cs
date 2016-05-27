@@ -96,24 +96,18 @@ namespace DatabaseCode
             foreach (KeyValuePair<string, Dictionary<string, int>> PairSD in QFDictionary)
             {
                 int maxValue = max[PairSD.Key];
-                int Counter = 1;
-                if (PairSD.Key == "brand" || PairSD.Key == "model" || PairSD.Key == "type")
-                    foreach (KeyValuePair<string, int> PairSI in PairSD.Value)
-                    {
 
-                        string commandstring = "INSERT INTO " + PairSD.Key + " VALUES (\'" + PairSI.Key + "\', " + (float)PairSI.Value / (float)maxValue + ", 'IDFVALUE')";
-                        Console.WriteLine("executing: " + commandstring);
-                        ExecuteCommand(commandstring, m_mbConnection);
-                    }
-                else
-                    foreach (KeyValuePair<string, int> PairSI in PairSD.Value)
-                    {
+                foreach (KeyValuePair<string, int> PairSI in PairSD.Value)
+                {
+                    string commandstring;
+                    if (PairSD.Key == "brand" || PairSD.Key == "model" || PairSD.Key == "type")
+                        commandstring = "INSERT INTO " + PairSD.Key + " VALUES (" + PairSI.Key + ", " + (float)PairSI.Value / (float)maxValue + ", 'IDFVALUE')";
+                    else
+                        commandstring = "INSERT INTO " + PairSD.Key + " VALUES (\'" + PairSI.Key + "\', " + (float)PairSI.Value / (float)maxValue + ", 'IDFVALUE')";
 
-                        string commandstring = "INSERT INTO " + PairSD.Key + " VALUES (" + PairSI.Key + ", " + (float)PairSI.Value / (float)maxValue + ", 'IDFVALUE')";
-                        Console.WriteLine("executing: " + commandstring);
-                        ExecuteCommand(commandstring, m_mbConnection);
-                    }
-
+                    Console.WriteLine("executing: " + commandstring);
+                    ExecuteCommand(commandstring, m_mbConnection);
+                }
             }
 
             //ExecuteCommand("SELECT name FROM sqlite_temp_master WHERE type=\'table\'");
