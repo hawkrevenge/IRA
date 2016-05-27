@@ -32,11 +32,11 @@ namespace DatabaseCode
             else
             {
                 Build(ref m_mbConnection, "MyMetabase.sqlite", "meta.sql");
-                mb = new Metabase(m_mbConnection);
+                mb = new Metabase(m_mbConnection, m_dbConnection);
                 mb.InsertAll();
             }
             Build(ref m_mbConnection, "MyMetabase.sqlite", "meta.sql");
-            mb = new Metabase(m_mbConnection);
+            mb = new Metabase(m_mbConnection,m_dbConnection);
             mb.InsertAll();
 
             while (true)
@@ -54,7 +54,7 @@ namespace DatabaseCode
                     Console.WriteLine("rebuilding metabase");
                     Disconnect(ref m_mbConnection);
                     Build(ref m_mbConnection, "MyMetabase.sqlite", "meta.sql");
-                    mb = new Metabase(m_mbConnection);
+                    mb = new Metabase(m_mbConnection,m_dbConnection);
                     mb.InsertAll();
                 }
 
@@ -69,8 +69,6 @@ namespace DatabaseCode
 
                     //ingevoerde query acties
                 }
-
-
             }
         }
 

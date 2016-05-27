@@ -15,18 +15,20 @@ namespace DatabaseCode
         static String[] tables = { "mpg", "cylinders", "displacement", "horsepower", "weight", "acceleration", "model_year", "origin", "brand", "model", "type" };
 
         SQLiteConnection m_mbConnection;
+        SQLiteConnection m_dbConnection;
 
-        public Metabase(SQLiteConnection connection)
+        public Metabase(SQLiteConnection connection, SQLiteConnection dbconnection)
         {
             instance = this;
             m_mbConnection = connection;
+            m_dbConnection = dbconnection;
         }
 
-        private void ExecuteCommand(String s, SQLiteConnection connection)
+        private SQLiteDataReader ExecuteCommand(String s, SQLiteConnection connection)
         {
             SQLiteCommand command = new SQLiteCommand(s, connection);
-            command.ExecuteNonQuery();
-            //SQLiteDataReader reader = command.ExecuteReader();
+            //command.ExecuteNonQuery();
+            return command.ExecuteReader();
             //while (reader.Read())
             //{
             //    Console.WriteLine(reader.GetFloat(0));
@@ -37,7 +39,6 @@ namespace DatabaseCode
         public void InsertAll()
         {
             InsertQF();
-
         }
 
         public void InsertQF()
@@ -92,44 +93,53 @@ namespace DatabaseCode
                             max[tmps[0]] = QFDictionary[tmps[0]][tmps[1]];
                     }
                 }
-            }
-            foreach (KeyValuePair<string, Dictionary<string, int>> PairSD in QFDictionary)
-            {
-                int maxValue = max[PairSD.Key];
-                int Counter = 1;
-                if (PairSD.Key == "brand" || PairSD.Key == "model" || PairSD.Key == "type")
-                    foreach (KeyValuePair<string, int> PairSI in PairSD.Value)
-                    {
-
-                        string commandstring = "INSERT INTO " + PairSD.Key + " VALUES (\'" + PairSI.Key + "\', " + (float)PairSI.Value / (float)maxValue + ", 'IDFVALUE')";
-                        Console.WriteLine("executing: " + commandstring);
-                        ExecuteCommand(commandstring, m_mbConnection);
-                    }
-                else
-                    foreach (KeyValuePair<string, int> PairSI in PairSD.Value)
-                    {
-
-                        string commandstring = "INSERT INTO " + PairSD.Key + " VALUES (" + PairSI.Key + ", " + (float)PairSI.Value / (float)maxValue + ", 'IDFVALUE')";
-                        Console.WriteLine("executing: " + commandstring);
-                        ExecuteCommand(commandstring, m_mbConnection);
-                    }
-
-            }
-
+            }          
             //ExecuteCommand("SELECT name FROM sqlite_temp_master WHERE type=\'table\'");
             //ExecuteCommand("SELECT name FROM sqlite_master \nWHERE type IN('table', 'view') AND name NOT LIKE 'sqlite_%'\nUNION ALL\nSELECT --->
             // ---> name FROM sqlite_temp_master\nWHERE type IN('table', 'view')\nORDER BY 1");
             Console.WriteLine("executed: QF-Values");
         }
 
+        float StandardDev(float[] Ti)
+        {
+            float Mean = 0;
+            foreach(float f in Ti)          
+                Mean += f;
+            Mean /= Ti.Length;
+
+            float Var = 0;
+            foreach (float f in Ti)
+                Var += (float) Math.Pow((f - Mean), 2);
+            Var /= Ti.Length; 
+            return (float)Math.Sqrt(Var);
+        }
+
+        float[] InsertIDF()
+        {
+
+
+
+            float[] test = new float[1];
+            return test;
+
+        }
+
+
+
         string StringTrim(string s)
         {
             StringBuilder builder = new StringBuilder();
-            string trimChars = " \')(";
+            string trimChars = " )(";
+            int name = -1;
             foreach(char c in s)
             {
-                if (!trimChars.Contains(c))
-                    builder.Append(c);
+                if (c == '\'')
+                    name *= -1;
+                else
+                {
+                    if (!trimChars.Contains(c)||name>0)
+                        builder.Append(c);
+                }
             }
             return builder.ToString();
         }
