@@ -72,10 +72,7 @@ namespace DatabaseCode
         public void InsertAll()
         {
             InsertQF();
-<<<<<<< HEAD
             InsertIDF();
-=======
-
 
             foreach (String table in tables)
             {
@@ -93,7 +90,6 @@ namespace DatabaseCode
                     ExecuteCommand(commandstring, m_mbConnection);
                 }
             }
->>>>>>> origin/master
         }
 
         public void InsertQF()
@@ -126,17 +122,8 @@ namespace DatabaseCode
                     }
                     else
                     {
-                        //replace
                         string[] tmps = StringTrim(s).Split('=');
-                        if (!QFDictionary.ContainsKey(tmps[0]))
-                            QFDictionary.Add(tmps[0], new Dictionary<string, int>());
-                        if (!QFDictionary[tmps[0]].ContainsKey(tmps[1]))
-                            QFDictionary[tmps[0]].Add(tmps[1], 0);
-                        QFDictionary[tmps[0]][tmps[1]] += n;
-                        if (!max.ContainsKey(tmps[0]))
-                            max.Add(tmps[0], QFDictionary[tmps[0]][tmps[1]]);
-                        else if (QFDictionary[tmps[0]][tmps[1]] > max[tmps[0]])
-                            max[tmps[0]] = QFDictionary[tmps[0]][tmps[1]];
+                        AddtoDictionary(ref QFDictionary, ref max, tmps[0], tmps[1],n);
                     }
                 }
             }
@@ -146,17 +133,7 @@ namespace DatabaseCode
 
                 foreach (KeyValuePair<string, int> PairSI in PairSD.Value)
                 {
-                    
-
-<<<<<<< HEAD
-                    //ExecuteCommand("SELECT name FROM sqlite_temp_master WHERE type=\'table\'");
-                    //ExecuteCommand("SELECT name FROM sqlite_master \nWHERE type IN('table', 'view') AND name NOT LIKE 'sqlite_%'\nUNION ALL\nSELECT --->
-                    // ---> name FROM sqlite_temp_master\nWHERE type IN('table', 'view')\nORDER BY 1");
-
-=======
                     EditTupleInDictionary(PairSD.Key, PairSI.Key, PairSI.Value/maxValue, 0);
-                    
->>>>>>> origin/master
                 }
             }
             Console.WriteLine("executed: QF-Values");
@@ -199,7 +176,6 @@ namespace DatabaseCode
                 for(int i = 9; i<12; i++)
                 {
                     string name = reader.GetString(i);
-
                     IDFDictionary[tables[i - 1]][name] += 1;
                     AddtoDictionary(ref IDFDictionary,ref max, tables[i - 1], name, 1);
                 }
