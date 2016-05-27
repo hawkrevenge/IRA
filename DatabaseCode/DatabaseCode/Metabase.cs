@@ -13,6 +13,7 @@ namespace DatabaseCode
     {
         public static Metabase instance;
         static String[] tables = { "mpg", "cylinders", "displacement", "horsepower", "weight", "acceleration", "model_year", "origin", "brand", "model", "type" };
+        Dictionary<string, Dictionary<object, Tuple<double, double, double>>> localDictionary;
 
         SQLiteConnection m_mbConnection;
         SQLiteConnection m_dbConnection;
@@ -22,6 +23,38 @@ namespace DatabaseCode
             instance = this;
             m_mbConnection = connection;
             m_dbConnection = dbconnection;
+
+            localDictionary = new Dictionary<string, Dictionary<object, Tuple<double, double, double>>>();
+            for (int i=0; i<tables.Length; i++)
+            {
+                localDictionary[tables[i]] = new Dictionary<object, Tuple<double, double, double>>();
+            }
+        }
+
+        private void EditTupleInDictionary(string table, object key, double value, int index)
+        {
+            Dictionary<object, Tuple<double, double, double>> tableDict = localDictionary[table];
+            if (tableDict.ContainsKey(key))
+            {
+                tableDict[key] = AddValueToTuple(tableDict[key], value, index);
+            }
+            else
+            {
+                tableDict[key] = new Tuple<double, double, double>(
+                    index == 0 ? value : 0,
+                    index == 1 ? value : 0,
+                    index == 2 ? value : 0
+                );
+            }
+        }
+
+        private Tuple<double, double, double> AddValueToTuple(Tuple<double, double, double> tuple, double value, int index)
+        {
+            return new Tuple<double, double, double>(
+                index == 0 ? value : tuple.Item1,
+                index == 1 ? value : tuple.Item2,
+                index == 2 ? value : tuple.Item3
+            );
         }
 
         private SQLiteDataReader ExecuteCommand(String s, SQLiteConnection connection)
@@ -44,12 +77,12 @@ namespace DatabaseCode
         public void InsertQF()
         {
             Console.WriteLine("Calculating: QF-Values");
-            Dictionary<string,Dictionary<string, int>> QFDictionary = new Dictionary<string, Dictionary<string, int>>();
+            Dictionary<string, Dictionary<string, int>> QFDictionary = new Dictionary<string, Dictionary<string, int>>();
             StreamReader reader = new StreamReader("workload.txt");
             reader.ReadLine(); reader.ReadLine();
             string line; int n; string[] splitted; // predefined variables
             Dictionary<string, int> max = new Dictionary<string, int>();
-            while((line = reader.ReadLine()) != ""&& line != null)
+            while ((line = reader.ReadLine()) != "" && line != null)
             {
                 // splits the amounnt and the query
                 splitted = Regex.Split(line, " times: ");
@@ -63,8 +96,8 @@ namespace DatabaseCode
                     // splits the special IN case
                     if (s.Contains("IN"))
                     {
-                        
-                        string[] tmps = Regex.Split(StringTrim(s), "IN" );
+
+                        string[] tmps = Regex.Split(StringTrim(s), "IN");
                         string key = tmps[0];
                         foreach (string s2 in tmps[1].Split(','))
                         {
@@ -93,11 +126,30 @@ namespace DatabaseCode
                             max[tmps[0]] = QFDictionary[tmps[0]][tmps[1]];
                     }
                 }
-            }          
-            //ExecuteCommand("SELECT name FROM sqlite_temp_master WHERE type=\'table\'");
-            //ExecuteCommand("SELECT name FROM sqlite_master \nWHERE type IN('table', 'view') AND name NOT LIKE 'sqlite_%'\nUNION ALL\nSELECT --->
-            // ---> name FROM sqlite_temp_master\nWHERE type IN('table', 'view')\nORDER BY 1");
-            Console.WriteLine("executed: QF-Values");
+            }
+            foreach (KeyValuePair<string, Dictionary<string, int>> PairSD in QFDictionary)
+            {
+                int maxValue = max[PairSD.Key];
+
+                foreach (KeyValuePair<string, int> PairSI in PairSD.Value)
+                {
+                    //string commandstring;
+                    //if (PairSD.Key == "brand" || PairSD.Key == "model" || PairSD.Key == "type")
+                    //    commandstring = "INSERT INTO " + PairSD.Key + " VALUES (" + PairSI.Key + ", " + (float)PairSI.Value / (float)maxValue + ", 'IDFVALUE')";
+                    //else
+                    //    commandstring = "INSERT INTO " + PairSD.Key + " VALUES (\'" + PairSI.Key + "\', " + (float)PairSI.Value / (float)maxValue + ", 'IDFVALUE')";
+
+                    //Console.WriteLine("executing: " + commandstring);
+                    //ExecuteCommand(commandstring, m_mbConnection);
+
+                    EditTupleInDictionary(PairSD.Key, PairSI.Key, PairSI.Value, 0);
+
+                    //ExecuteCommand("SELECT name FROM sqlite_temp_master WHERE type=\'table\'");
+                    //ExecuteCommand("SELECT name FROM sqlite_master \nWHERE type IN('table', 'view') AND name NOT LIKE 'sqlite_%'\nUNION ALL\nSELECT --->
+                    // ---> name FROM sqlite_temp_master\nWHERE type IN('table', 'view')\nORDER BY 1");
+                    Console.WriteLine("executed: QF-Values");
+                }
+            }
         }
 
         float StandardDev(float[] Ti)
