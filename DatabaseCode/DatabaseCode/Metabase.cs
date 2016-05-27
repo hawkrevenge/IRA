@@ -31,7 +31,7 @@ namespace DatabaseCode
             }
         }
 
-        private void EditTupleInDictionary(string table, object key, double value, int index)
+        private void EditTupleInDictionary(string table, string key, double value, int index)
         {
             Dictionary<object, Tuple<double, double, double>> tableDict = localDictionary[table];
             if (tableDict.ContainsKey(key))
@@ -95,11 +95,11 @@ namespace DatabaseCode
         public void InsertQF()
         {
             Console.WriteLine("Calculating: QF-Values");
-            Dictionary<string, Dictionary<string, int>> QFDictionary = new Dictionary<string, Dictionary<string, int>>();
+            Dictionary<string, Dictionary<string, double>> QFDictionary = new Dictionary<string, Dictionary<string, double>>();
             StreamReader reader = new StreamReader("workload.txt");
             reader.ReadLine(); reader.ReadLine();
             string line; int n; string[] splitted; // predefined variables
-            Dictionary<string, int> max = new Dictionary<string, int>();
+            Dictionary<string, double> max = new Dictionary<string, double>();
             while ((line = reader.ReadLine()) != "" && line != null)
             {
                 // splits the amounnt and the query
@@ -114,24 +114,28 @@ namespace DatabaseCode
                     // splits the special IN case
                     if (s.Contains("IN"))
                     {
-
                         string[] tmps = Regex.Split(StringTrim(s), "IN");
                         string key = tmps[0];
                         foreach (string s2 in tmps[1].Split(','))
-                            AddtoDictionary(ref QFDictionary,ref max, key, s2, n);
+                        {
+                            string trimmed = s2.TrimEnd('0').TrimEnd('.');
+                            AddtoDictionary(ref QFDictionary, ref max, key, trimmed, n);
+                        }
                     }
                     else
                     {
                         string[] tmps = StringTrim(s).Split('=');
-                        AddtoDictionary(ref QFDictionary, ref max, tmps[0], tmps[1],n);
+                        {
+                            string trimmed = tmps[1].TrimEnd('0').TrimEnd('.');
+                            AddtoDictionary(ref QFDictionary, ref max, tmps[0],trimmed, n);
+                        }
                     }
                 }
             }
-            foreach (KeyValuePair<string, Dictionary<string, int>> PairSD in QFDictionary)
+            foreach (KeyValuePair<string, Dictionary<string, double>> PairSD in QFDictionary)
             {
-                int maxValue = max[PairSD.Key];
-
-                foreach (KeyValuePair<string, int> PairSI in PairSD.Value)
+                double maxValue = max[PairSD.Key];
+                foreach (KeyValuePair<string, double> PairSI in PairSD.Value)
                 {
                     EditTupleInDictionary(PairSD.Key, PairSI.Key, PairSI.Value/maxValue, 0);
                 }
@@ -139,57 +143,71 @@ namespace DatabaseCode
             Console.WriteLine("executed: QF-Values");
         }
 
-        float StandardDev(float[] Ti)
+        double StandardDev(double[] Ti)
         {
-            float Mean = 0;
-            foreach(float f in Ti)          
+            double Mean = 0;
+            foreach(double f in Ti)          
                 Mean += f;
             Mean /= Ti.Length;
 
-            float Var = 0;
-            foreach (float f in Ti)
-                Var += (float) Math.Pow((f - Mean), 2);
+            double Var = 0;
+            foreach (double f in Ti)
+                Var += (double) Math.Pow((f - Mean), 2);
             Var /= Ti.Length; 
-            return (float)Math.Sqrt(Var);
+            return (double)Math.Sqrt(Var);
         }
 
-        void  InsertIDF()
+        void InsertIDF()
         {
             SQLiteDataReader reader = ExecuteCommand("SELECT COUNT(*) FROM autompg", m_dbConnection);
             reader.Read();
             int count = reader.GetInt32(0);
-            float[][] Values = new float[8][];
-            for(int i =0; i < 8;i++)
-                Values[i] = new float[count];
+            double[][] Values = new double[8][];
+            double[] Bandwiths = new double[8];
+            for (int i = 0; i < 8; i++)
+                Values[i] = new double[count];
             reader = ExecuteCommand("SELECT * FROM autompg", m_dbConnection);
-            Dictionary<string, Dictionary<string, int>> IDFDictionary = new Dictionary<string, Dictionary<string, int>>();
-            Dictionary<string, int> max = new Dictionary<string, int>();
+            Dictionary<string, Dictionary<string, double>> IDFDictionary = new Dictionary<string, Dictionary<string, double>>();
+            Dictionary<string, double> max = new Dictionary<string, double>();
             int counter = 0;
             while (reader.Read())
             {
                 for (int i = 1; i < 9; i++)
                 {
-                    Values[i][counter] = (float)reader.GetDouble(i);
+                    Values[i-1][counter] = (double)reader.GetDouble(i);
                 }
-                 //   Console.WriteLine(reader.GetDouble(i));
 
-                for(int i = 9; i<12; i++)
+                for (int i = 9; i < 12; i++)
                 {
                     string name = reader.GetString(i);
-                    IDFDictionary[tables[i - 1]][name] += 1;
-                    AddtoDictionary(ref IDFDictionary,ref max, tables[i - 1], name, 1);
+                    AddtoDictionary(ref IDFDictionary, ref max, tables[i - 1], name, 1);
                 }
                 counter++;
             }
-            float[] bandwidth = new float[8];
             for (int i = 0; i < 8; i++)
-                bandwidth[i] = (float)1.06 * StandardDev(Values[i]) * (float) Math.Pow(count, 2);
+            {
+                Bandwiths[i] = (double)1.06 * StandardDev(Values[i]) * (double)Math.Pow(count, -0.2);
+                for (int j = 0; j < count; j++)
+                {
+                    double sum = 0;
+                    for (int j2 = 0; j2 < count; j2++)
+                    {
+                        sum += (double)Math.Pow(Math.E, (double)-0.5 * Math.Pow(((Values[i][j2] - Values[i][j]) / Bandwiths[i]), 2));
+                    }
+                    AddtoDictionary(ref IDFDictionary, ref max, tables[i], Values[i][j] + "", (double)Math.Log10(count / sum));
+                    string name = Values[i][j].ToString();
+                    EditTupleInDictionary(tables[i], name, (double)Math.Log10(count / sum), 1);
+                }
+            }
+            for (int i = 9; i < 12; i++)
+                foreach (KeyValuePair<string, double> PairSF in IDFDictionary[tables[i - 1]])
+                    EditTupleInDictionary(tables[i - 1], PairSF.Key, (double)Math.Log10(count / PairSF.Value), 1); 
         }
 
-        void AddtoDictionary(ref Dictionary<string, Dictionary<string, int>> d, ref Dictionary<string, int> max, string key1, string key2, int amount)
+        void AddtoDictionary(ref Dictionary<string, Dictionary<string, double>> d, ref Dictionary<string, double> max, string key1, string key2, double amount)
         {
             if (!d.ContainsKey(key1))
-                d.Add(key1, new Dictionary<string, int>());
+                d.Add(key1, new Dictionary<string, double>());
             if (!d[key1].ContainsKey(key2))
                 d[key1].Add(key2, amount);
             else
