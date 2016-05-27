@@ -72,7 +72,28 @@ namespace DatabaseCode
         public void InsertAll()
         {
             InsertQF();
+<<<<<<< HEAD
             InsertIDF();
+=======
+
+
+            foreach (String table in tables)
+            {
+                Dictionary<object, Tuple<double, double, double>> tableDict = localDictionary[table];
+                foreach (KeyValuePair<object, Tuple<double, double, double>> tuple in tableDict)
+                {
+                    string commandstring;
+                    if (table == "brand" || table == "model" || table == "type")
+                        commandstring = "INSERT INTO " + table + " VALUES (\'" + tuple.Key + "\', ";
+                    else
+                        commandstring = "INSERT INTO " + table + " VALUES (" + tuple.Key + ", ";
+
+                    commandstring += tuple.Value.Item1 + ", " + tuple.Value.Item2 + ", " + tuple.Value.Item3 + ")";
+                    Console.WriteLine("executing: " + commandstring);
+                    ExecuteCommand(commandstring, m_mbConnection);
+                }
+            }
+>>>>>>> origin/master
         }
 
         public void InsertQF()
@@ -125,21 +146,17 @@ namespace DatabaseCode
 
                 foreach (KeyValuePair<string, int> PairSI in PairSD.Value)
                 {
-                    //string commandstring;
-                    //if (PairSD.Key == "brand" || PairSD.Key == "model" || PairSD.Key == "type")
-                    //    commandstring = "INSERT INTO " + PairSD.Key + " VALUES (" + PairSI.Key + ", " + (float)PairSI.Value / (float)maxValue + ", 'IDFVALUE')";
-                    //else
-                    //    commandstring = "INSERT INTO " + PairSD.Key + " VALUES (\'" + PairSI.Key + "\', " + (float)PairSI.Value / (float)maxValue + ", 'IDFVALUE')";
+                    
 
-                    //Console.WriteLine("executing: " + commandstring);
-                    //ExecuteCommand(commandstring, m_mbConnection);
-
-                    EditTupleInDictionary(PairSD.Key, PairSI.Key, PairSI.Value, 0);
-
+<<<<<<< HEAD
                     //ExecuteCommand("SELECT name FROM sqlite_temp_master WHERE type=\'table\'");
                     //ExecuteCommand("SELECT name FROM sqlite_master \nWHERE type IN('table', 'view') AND name NOT LIKE 'sqlite_%'\nUNION ALL\nSELECT --->
                     // ---> name FROM sqlite_temp_master\nWHERE type IN('table', 'view')\nORDER BY 1");
 
+=======
+                    EditTupleInDictionary(PairSD.Key, PairSI.Key, PairSI.Value/maxValue, 0);
+                    
+>>>>>>> origin/master
                 }
             }
             Console.WriteLine("executed: QF-Values");
