@@ -72,6 +72,7 @@ namespace DatabaseCode
         public void InsertAll()
         {
             InsertQF();
+            InsertIDF();
         }
 
         public void InsertQF()
@@ -100,20 +101,11 @@ namespace DatabaseCode
                         string[] tmps = Regex.Split(StringTrim(s), "IN");
                         string key = tmps[0];
                         foreach (string s2 in tmps[1].Split(','))
-                        {
-                            if (!QFDictionary.ContainsKey(key))
-                                QFDictionary.Add(key, new Dictionary<string, int>());
-                            if (!QFDictionary[key].ContainsKey(s2))
-                                QFDictionary[key].Add(s2, 0);
-                            QFDictionary[key][s2] += n;
-                            if (!max.ContainsKey(key))
-                                max.Add(key, QFDictionary[key][s2]);
-                            else if (QFDictionary[key][s2] > max[key])
-                                max[key] = QFDictionary[key][s2];
-                        }
+                            AddtoDictionary(ref QFDictionary,ref max, key, s2, n);
                     }
                     else
                     {
+                        //replace
                         string[] tmps = StringTrim(s).Split('=');
                         if (!QFDictionary.ContainsKey(tmps[0]))
                             QFDictionary.Add(tmps[0], new Dictionary<string, int>());
@@ -147,9 +139,10 @@ namespace DatabaseCode
                     //ExecuteCommand("SELECT name FROM sqlite_temp_master WHERE type=\'table\'");
                     //ExecuteCommand("SELECT name FROM sqlite_master \nWHERE type IN('table', 'view') AND name NOT LIKE 'sqlite_%'\nUNION ALL\nSELECT --->
                     // ---> name FROM sqlite_temp_master\nWHERE type IN('table', 'view')\nORDER BY 1");
-                    Console.WriteLine("executed: QF-Values");
+
                 }
             }
+            Console.WriteLine("executed: QF-Values");
         }
 
         float StandardDev(float[] Ti)
@@ -166,17 +159,53 @@ namespace DatabaseCode
             return (float)Math.Sqrt(Var);
         }
 
-        float[] InsertIDF()
+        void  InsertIDF()
         {
+            SQLiteDataReader reader = ExecuteCommand("SELECT COUNT(*) FROM autompg", m_dbConnection);
+            reader.Read();
+            int count = reader.GetInt32(0);
+            float[][] Values = new float[8][];
+            for(int i =0; i < 8;i++)
+                Values[i] = new float[count];
+            reader = ExecuteCommand("SELECT * FROM autompg", m_dbConnection);
+            Dictionary<string, Dictionary<string, int>> IDFDictionary = new Dictionary<string, Dictionary<string, int>>();
+            Dictionary<string, int> max = new Dictionary<string, int>();
+            int counter = 0;
+            while (reader.Read())
+            {
+                for (int i = 1; i < 9; i++)
+                {
+                    Values[i][counter] = (float)reader.GetDouble(i);
+                }
+                 //   Console.WriteLine(reader.GetDouble(i));
 
+                for(int i = 9; i<12; i++)
+                {
+                    string name = reader.GetString(i);
 
-
-            float[] test = new float[1];
-            return test;
-
+                    IDFDictionary[tables[i - 1]][name] += 1;
+                    AddtoDictionary(ref IDFDictionary,ref max, tables[i - 1], name, 1);
+                }
+                counter++;
+            }
+            float[] bandwidth = new float[8];
+            for (int i = 0; i < 8; i++)
+                bandwidth[i] = (float)1.06 * StandardDev(Values[i]) * (float) Math.Pow(count, 2);
         }
 
-
+        void AddtoDictionary(ref Dictionary<string, Dictionary<string, int>> d, ref Dictionary<string, int> max, string key1, string key2, int amount)
+        {
+            if (!d.ContainsKey(key1))
+                d.Add(key1, new Dictionary<string, int>());
+            if (!d[key1].ContainsKey(key2))
+                d[key1].Add(key2, amount);
+            else
+                d[key1][key2] += amount;
+            if (!max.ContainsKey(key1))
+                max.Add(key1, d[key1][key2]);
+            else if (d[key1][key2] > max[key1])
+                max[key1] = d[key1][key2];
+        }
 
         string StringTrim(string s)
         {
