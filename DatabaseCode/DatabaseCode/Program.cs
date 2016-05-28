@@ -144,6 +144,7 @@ namespace DatabaseCode
                 Console.WriteLine("\nSomething went wrong when finding results,\nmake sure that the names have single quotes");
             }
         }
+
         public string StringTrim(string s)
         {
             StringBuilder builder = new StringBuilder();
