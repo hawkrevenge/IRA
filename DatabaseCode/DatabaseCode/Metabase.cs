@@ -12,6 +12,7 @@ namespace DatabaseCode
     class Metabase
     {
         public static Metabase instance;
+        public static Dictionary<string, double> QFmax = new Dictionary<string, double>();
         static String[] tables = { "mpg", "cylinders", "displacement", "horsepower", "weight", "acceleration", "model_year", "origin", "brand", "model", "type" };
         Dictionary<string, Dictionary<object, Tuple<double, double, double>>> localDictionary;
 
@@ -34,6 +35,7 @@ namespace DatabaseCode
         private void EditTupleInDictionary(string table, string key, double value, int index)
         {
             Dictionary<object, Tuple<double, double, double>> tableDict = localDictionary[table];
+
             if (tableDict.ContainsKey(key))
             {
                 tableDict[key] = AddValueToTuple(tableDict[key], value, index);
@@ -41,7 +43,7 @@ namespace DatabaseCode
             else
             {
                 tableDict[key] = new Tuple<double, double, double>(
-                    index == 0 ? value : 0,
+                    index == 0 ? value : 1/(QFmax[table]+1),
                     index == 1 ? value : 0,
                     index == 2 ? value : 0
                 );
@@ -72,7 +74,7 @@ namespace DatabaseCode
         public void InsertAll()
         {
             InsertQF();
-            //InsertIDF();
+            InsertIDF();
 
             foreach (String table in tables)
             {
@@ -99,7 +101,7 @@ namespace DatabaseCode
             StreamReader reader = new StreamReader("workload.txt");
             reader.ReadLine(); reader.ReadLine();
             string line; int n; string[] splitted; // predefined variables
-            Dictionary<string, double> max = new Dictionary<string, double>();
+            
             while ((line = reader.ReadLine()) != "" && line != null)
             {
                 // splits the amounnt and the query
@@ -119,7 +121,7 @@ namespace DatabaseCode
                         foreach (string s2 in tmps[1].Split(','))
                         {
                             string trimmed = s2.TrimEnd('0').TrimEnd('.');
-                            AddtoDictionary(ref QFDictionary, ref max, key, trimmed, n);
+                            AddtoDictionary(ref QFDictionary, ref QFmax, key, trimmed, n);
                         }
                     }
                     else
@@ -127,18 +129,23 @@ namespace DatabaseCode
                         string[] tmps = StringTrim(s).Split('=');
                         {
                             string trimmed = tmps[1].TrimEnd('0').TrimEnd('.');
-                            AddtoDictionary(ref QFDictionary, ref max, tmps[0],trimmed, n);
+                            AddtoDictionary(ref QFDictionary, ref QFmax, tmps[0],trimmed, n);
                         }
                     }
                 }
             }
             foreach (KeyValuePair<string, Dictionary<string, double>> PairSD in QFDictionary)
             {
-                double maxValue = max[PairSD.Key];
+                double maxValue = QFmax[PairSD.Key];
                 foreach (KeyValuePair<string, double> PairSI in PairSD.Value)
                 {
-                    EditTupleInDictionary(PairSD.Key, PairSI.Key, PairSI.Value/maxValue, 0);
+                    EditTupleInDictionary(PairSD.Key, PairSI.Key, (PairSI.Value+1)/(maxValue+1), 0);
                 }
+            }
+            foreach(string table in tables)
+            {
+                if (!QFmax.ContainsKey(table))
+                    QFmax.Add(table, 0);
             }
             Console.WriteLine("executed: QF-Values");
         }
