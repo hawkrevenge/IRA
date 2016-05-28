@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Data.SQLite;
 using System.IO;
+using System.Text.RegularExpressions;
 
 // Our program has some commands:
 // rebuild = rebuilds the database and metadatabase
@@ -38,38 +43,8 @@ namespace DatabaseCode
             Build(ref m_mbConnection, "MyMetabase.sqlite", "meta.sql");
             mb = new Metabase(m_mbConnection,m_dbConnection);
             mb.InsertAll();
-
-            while (true)
-            {
-                string input;
-                input = Console.ReadLine();
-                if (input == "rebuildData")
-                {
-                    Console.WriteLine("rebuilding database");
-                    Disconnect(ref m_dbConnection);
-                    Build(ref m_dbConnection, "MyDatabase.sqlite", "autompg.sql");
-                }
-                else if (input == "rebuildMeta")
-                {
-                    Console.WriteLine("rebuilding metabase");
-                    Disconnect(ref m_mbConnection);
-                    Build(ref m_mbConnection, "MyMetabase.sqlite", "meta.sql");
-                    mb = new Metabase(m_mbConnection,m_dbConnection);
-                    mb.InsertAll();
-                }
-
-                else if (input == "quit")
-                {
-                    Console.WriteLine("quitting");
-                    DisconnectAll();
-                    return;
-                }
-                else
-                {
-
-                    //ingevoerde query acties
-                }
-            }
+            Console.Write("\nAwaiting command: ");
+            while (TextCommand(Console.ReadLine())) { Console.Write("\nAwaiting command: "); }
         }
 
         void UseStandardDB(SQLiteConnection s, string fileName)
@@ -83,6 +58,111 @@ namespace DatabaseCode
                 Console.WriteLine("executed: " + line);
             }
 
+        }
+
+        bool TextCommand(string input)
+        {
+            if (input == "rebuildData")
+            {
+                Console.WriteLine("rebuilding database");
+                Disconnect(ref m_dbConnection);
+                Build(ref m_dbConnection, "MyDatabase.sqlite", "autompg.sql");
+            }
+            else if (input == "rebuildMeta")
+            {
+                Console.WriteLine("rebuilding metabase");
+                Disconnect(ref m_mbConnection);
+                Build(ref m_mbConnection, "MyMetabase.sqlite", "meta.sql");
+                mb = new Metabase(m_mbConnection, m_dbConnection);
+                mb.InsertAll();
+            }
+
+            else if (input == "quit")
+            {
+                Console.WriteLine("quitting");
+                DisconnectAll();
+                return false;
+            }
+            else if (input == "help")
+            {
+                Console.WriteLine("\nOur program uses the following commands (case sensitive):");
+                Console.WriteLine("-Typing help returns the usable commands.");
+                Console.WriteLine("-Typing a ceq will return the top-k results where the default k = 10, ending with a semicolon.");
+                Console.WriteLine("-Typing rebuildData will rebuild the database using the autompg.sql file.");
+                Console.WriteLine("-Typing rebuildMeta will rebuild the meta-database using the Meta.sql and workload.txt files.");
+                Console.WriteLine("-Typing quit will exit the program.");
+            }
+            else if (input[input.Length - 1] == ';')
+            {
+                ceqExecute(input);
+                //ingevoerde query acties
+            }
+            else
+                Console.WriteLine("Command not recognised, type help for the usable commands");
+            return true;
+        }
+
+        void ceqExecute(string input)
+        {
+            try
+            {
+                SQLiteDataReader reader;
+                input = StringTrim(input);
+                int k = 10;
+                string[] splitted = input.Split(',');
+                StringBuilder s = new StringBuilder();
+                s.Append("SELECT * FROM autompg WHERE ");
+                foreach (string attribute in splitted)
+                {
+                    if (s[s.Length - 1] != ' ')
+                        s.Append(" AND ");
+                    string[] tmpsplit = attribute.Split('=');
+                    if (tmpsplit[0] == "k")
+                        k = int.Parse(tmpsplit[1]);
+                    else
+                    {
+                        // top k zoeken
+                        s.Append(attribute);
+                    }
+                }
+                reader = mb.ExecuteCommand(s.ToString(), m_dbConnection);
+                int counter = 1;
+                while (reader.Read())
+                {
+                    s.Clear();
+                    s.Append(counter + ": " + reader.GetDouble(1));
+                    for (int i = 1; i < 9; i++)
+                        s.Append(", " + reader.GetDouble(i));
+                    for (int i = 9; i < 12; i++)
+                        s.Append(", " + reader.GetString(i));
+                    Console.WriteLine(s.ToString());
+                    counter++;
+                }
+            }
+            catch
+            {
+                Console.WriteLine("\nSomething went wrong when finding results,\nmake sure that the names have single quotes");
+            }
+        }
+        public string StringTrim(string s)
+        {
+            StringBuilder builder = new StringBuilder();
+            string trimChars = " )(;";
+            int name = -1;
+            foreach (char c in s)
+            {
+                if (c == '\'')
+                {
+                    builder.Append(c);
+                    name *= -1;
+                }
+                else
+                {
+                    if (!trimChars.Contains(c) || name > 0)
+                        builder.Append(c);
+                }
+            }
+            return builder.ToString();
         }
 
         // Creates an empty database file

@@ -57,7 +57,7 @@ namespace DatabaseCode
             );
         }
 
-        private SQLiteDataReader ExecuteCommand(String s, SQLiteConnection connection)
+        public SQLiteDataReader ExecuteCommand(String s, SQLiteConnection connection)
         {
             SQLiteCommand command = new SQLiteCommand(s, connection);
             //command.ExecuteNonQuery();
@@ -72,7 +72,7 @@ namespace DatabaseCode
         public void InsertAll()
         {
             InsertQF();
-            InsertIDF();
+            //InsertIDF();
 
             foreach (String table in tables)
             {
@@ -218,10 +218,10 @@ namespace DatabaseCode
                 max[key1] = d[key1][key2];
         }
 
-        string StringTrim(string s)
+        private string StringTrim(string s)
         {
             StringBuilder builder = new StringBuilder();
-            string trimChars = " )(";
+            string trimChars = " )(;";
             int name = -1;
             foreach(char c in s)
             {
