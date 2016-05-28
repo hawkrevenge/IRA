@@ -13,7 +13,6 @@ namespace DatabaseCode
     {
         public static Metabase instance;
         public static Dictionary<string, double> QFmax = new Dictionary<string, double>();
-        static String[] tables = { "mpg", "cylinders", "displacement", "horsepower", "weight", "acceleration", "model_year", "origin", "brand", "model", "type" };
         Dictionary<string, Dictionary<object, Tuple<string, string, string>>> localDictionary;
 
         SQLiteConnection m_mbConnection;
@@ -26,9 +25,9 @@ namespace DatabaseCode
             m_dbConnection = dbconnection;
 
             localDictionary = new Dictionary<string, Dictionary<object, Tuple<string, string, string>>>();
-            for (int i=0; i<tables.Length; i++)
+            for (int i=0; i<Program.tables.Length; i++)
             {
-                localDictionary[tables[i]] = new Dictionary<object, Tuple<string, string, string>>();
+                localDictionary[Program.tables[i]] = new Dictionary<object, Tuple<string, string, string>>();
             }
         }
 
@@ -59,18 +58,14 @@ namespace DatabaseCode
             );
         }
 
-        public SQLiteDataReader ExecuteCommand(String s, SQLiteConnection connection)
-        {
-            SQLiteCommand command = new SQLiteCommand(s, connection);
-            return command.ExecuteReader();
-        }
+
 
         public void InsertAll()
         {
             InsertQF();
             InsertIDF();
 
-            foreach (String table in tables)
+            foreach (String table in Program.tables)
             {
                 Dictionary<object, Tuple<string, string, string>> tableDict = localDictionary[table];
                 foreach (KeyValuePair<object, Tuple<string, string, string>> tuple in tableDict)
@@ -83,7 +78,7 @@ namespace DatabaseCode
 
                     commandstring += tuple.Value.Item1 + ", " + tuple.Value.Item2 + ", " + tuple.Value.Item3 + ")";
                     Console.WriteLine("executing: " + commandstring);
-                    ExecuteCommand(commandstring, m_mbConnection);
+                    Program.ExecuteCommand(commandstring, m_mbConnection);
                 }
             }
         }
@@ -150,7 +145,7 @@ namespace DatabaseCode
                 }
             }
 
-            foreach(string table in tables)
+            foreach(string table in Program.tables)
             {
                 if (!QFmax.ContainsKey(table))
                     QFmax.Add(table, 0);
@@ -174,14 +169,14 @@ namespace DatabaseCode
 
         void InsertIDF()
         {
-            SQLiteDataReader reader = ExecuteCommand("SELECT COUNT(*) FROM autompg", m_dbConnection);
+            SQLiteDataReader reader = Program.ExecuteCommand("SELECT COUNT(*) FROM autompg", m_dbConnection);
             reader.Read();
             int count = reader.GetInt32(0);
             double[][] Values = new double[8][];
             double[] Bandwiths = new double[8];
             for (int i = 0; i < 8; i++)
                 Values[i] = new double[count];
-            reader = ExecuteCommand("SELECT * FROM autompg", m_dbConnection);
+            reader = Program.ExecuteCommand("SELECT * FROM autompg", m_dbConnection);
             Dictionary<string, Dictionary<string, double>> IDFDictionary = new Dictionary<string, Dictionary<string, double>>();
             Dictionary<string, double> max = new Dictionary<string, double>();
             int counter = 0;
@@ -195,7 +190,7 @@ namespace DatabaseCode
                 for (int i = 9; i < 12; i++)
                 {
                     string name = reader.GetString(i);
-                    AddToQFDictionary(ref IDFDictionary, ref max, tables[i - 1], name, 1);
+                    AddToQFDictionary(ref IDFDictionary, ref max, Program.tables[i - 1], name, 1);
                 }
                 counter++;
             }
@@ -209,14 +204,14 @@ namespace DatabaseCode
                     {
                         sum += (double)Math.Pow(Math.E, (double)-0.5 * Math.Pow(((Values[i][j2] - Values[i][j]) / Bandwiths[i]), 2));
                     }
-                    AddToQFDictionary(ref IDFDictionary, ref max, tables[i], Values[i][j] + "", (double)Math.Log10(count / sum));
+                    AddToQFDictionary(ref IDFDictionary, ref max, Program.tables[i], Values[i][j] + "", (double)Math.Log10(count / sum));
                     string name = Values[i][j].ToString();
-                    EditTupleInDictionary(tables[i], name, Math.Log10(count / sum).ToString(), 1);
+                    EditTupleInDictionary(Program.tables[i], name, Math.Log10(count / sum).ToString(), 1);
                 }
             }
             for (int i = 9; i < 12; i++)
-                foreach (KeyValuePair<string, double> PairSF in IDFDictionary[tables[i - 1]])
-                    EditTupleInDictionary(tables[i - 1], PairSF.Key, Math.Log10(count / PairSF.Value).ToString(), 1); 
+                foreach (KeyValuePair<string, double> PairSF in IDFDictionary[Program.tables[i - 1]])
+                    EditTupleInDictionary(Program.tables[i - 1], PairSF.Key, Math.Log10(count / PairSF.Value).ToString(), 1); 
         }
 
         void AddToQFDictionary(ref Dictionary<string, Dictionary<string, double>> d, ref Dictionary<string, double> max, string key1, string key2, double amount)

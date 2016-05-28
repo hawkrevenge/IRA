@@ -19,7 +19,9 @@ namespace DatabaseCode
         // Holds our connection with the database
         SQLiteConnection m_dbConnection;
         SQLiteConnection m_mbConnection;
+        CEQHandler handler;
         Metabase mb;
+        static  public String[] tables = { "mpg", "cylinders", "displacement", "horsepower", "weight", "acceleration", "model_year", "origin", "brand", "model", "type" };
 
         static void Main(string[] args)
         {
@@ -43,6 +45,7 @@ namespace DatabaseCode
             Build(ref m_mbConnection, "MyMetabase.sqlite", "meta.sql");
             mb = new Metabase(m_mbConnection,m_dbConnection);
             mb.InsertAll();
+            handler = new CEQHandler(m_mbConnection, m_dbConnection);
             Console.Write("\nAwaiting command: ");
             while (TextCommand(Console.ReadLine())) { Console.Write("\nAwaiting command: "); }
         }
@@ -62,6 +65,7 @@ namespace DatabaseCode
 
         bool TextCommand(string input)
         {
+            input.Trim(' ');
             if (input == "rebuildData")
             {
                 Console.WriteLine("rebuilding database");
@@ -94,7 +98,7 @@ namespace DatabaseCode
             }
             else if (input[input.Length - 1] == ';')
             {
-                ceqExecute(input);
+                handler.ceqExecute(input);
                 //ingevoerde query acties
             }
             else
@@ -102,68 +106,10 @@ namespace DatabaseCode
             return true;
         }
 
-        void ceqExecute(string input)
+        static public SQLiteDataReader ExecuteCommand(String s, SQLiteConnection connection)
         {
-            try
-            {
-                SQLiteDataReader reader;
-                input = StringTrim(input);
-                int k = 10;
-                string[] splitted = input.Split(',');
-                StringBuilder s = new StringBuilder();
-                s.Append("SELECT * FROM autompg WHERE ");
-                foreach (string attribute in splitted)
-                {
-                    if (s[s.Length - 1] != ' ')
-                        s.Append(" AND ");
-                    string[] tmpsplit = attribute.Split('=');
-                    if (tmpsplit[0] == "k")
-                        k = int.Parse(tmpsplit[1]);
-                    else
-                    {
-                        // top k zoeken
-                        s.Append(attribute);
-                    }
-                }
-                reader = mb.ExecuteCommand(s.ToString(), m_dbConnection);
-                int counter = 1;
-                while (reader.Read())
-                {
-                    s.Clear();
-                    s.Append(counter + ": " + reader.GetDouble(1));
-                    for (int i = 1; i < 9; i++)
-                        s.Append(", " + reader.GetDouble(i));
-                    for (int i = 9; i < 12; i++)
-                        s.Append(", " + reader.GetString(i));
-                    Console.WriteLine(s.ToString());
-                    counter++;
-                }
-            }
-            catch
-            {
-                Console.WriteLine("\nSomething went wrong when finding results,\nmake sure that the names have single quotes");
-            }
-        }
-
-        public string StringTrim(string s)
-        {
-            StringBuilder builder = new StringBuilder();
-            string trimChars = " )(;";
-            int name = -1;
-            foreach (char c in s)
-            {
-                if (c == '\'')
-                {
-                    builder.Append(c);
-                    name *= -1;
-                }
-                else
-                {
-                    if (!trimChars.Contains(c) || name > 0)
-                        builder.Append(c);
-                }
-            }
-            return builder.ToString();
+            SQLiteCommand command = new SQLiteCommand(s, connection);
+            return command.ExecuteReader();
         }
 
         // Creates an empty database file
