@@ -71,7 +71,6 @@ namespace DatabaseCode
                 Disconnect(ref m_mbConnection);
                 Build(ref m_mbConnection, "MyMetabase.sqlite", "meta.sql");
                 mb = new Metabase(m_mbConnection, m_dbConnection);
-                mb.InsertAll();
             }
 
             else if (input == "quit")

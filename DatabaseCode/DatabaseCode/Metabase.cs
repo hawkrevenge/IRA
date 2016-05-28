@@ -44,7 +44,7 @@ namespace DatabaseCode
                 tableDict[key] = new Tuple<string, string, string>(
                     index == 0 ? value : (1 / (QFmax[table] + 1)).ToString(),
                     index == 1 ? value : "0",
-                    index == 2 ? value : "0"
+                    index == 2 ? value : "'none'"
                 );
             }
         }
@@ -214,7 +214,7 @@ namespace DatabaseCode
                     EditTupleInDictionary(Program.tables[i - 1], PairSF.Key, Math.Log10(count / PairSF.Value).ToString(), 1); 
             for (int i=0; i<bandwidths.Length; i++)
             {
-                Program.ExecuteCommand("INSERT INTO bandwidth VALUES ("+ i + ", " + bandwidths[i] +");", m_mbConnection);
+                Program.ExecuteCommand("INSERT INTO bandwidth VALUES ("+ i + ", " + bandwidths[i] +")", m_mbConnection);
             }
         }
 

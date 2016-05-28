@@ -47,11 +47,13 @@ namespace DatabaseCode
                 }
             }
             double[] scores = new double[count];
+            double[] missing = new double[count];
             reader = Program.ExecuteCommand("SELECT * FROM autompg", m_dbConnection);
             SQLiteDataReader MetaValue;
 
             for (int tuplenumber = 0; tuplenumber < count; tuplenumber++)
             {
+                missing[tuplenumber] = 0;
                 reader.Read();
                 double sum = 0;
                 for (int i = 0; i < 11; i++)
@@ -60,31 +62,58 @@ namespace DatabaseCode
                     double s = 0;
                     if (values.ContainsKey(table))
                     {
-
+                        double QF;
+                        double J;
+                        SQLiteDataReader JacQueryReader;
+                        JacQueryReader = Program.ExecuteCommand("Select * From " + table + " Where id = " + values[table], m_mbConnection);
+                        JacQueryReader.Read();
+                        bool equalcheck;
                         if (i < 8)
                         {
-                            MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = " + reader.GetDouble(i+1), m_mbConnection);
+                            MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = " + reader.GetDouble(i + 1), m_mbConnection);
                             MetaValue.Read();
-                            s += Math.Pow(Math.E, -0.5 * (Math.Pow((((double)values[table] - MetaValue.GetDouble(0)) / Bandwiths[i]), 2)))*MetaValue.GetDouble(1);
+                            s += Math.Pow(Math.E, -0.5 * (Math.Pow(((Convert.ToDouble(values[table]) - MetaValue.GetDouble(0)) / Bandwiths[i]), 2))) * MetaValue.GetDouble(1);
+                            J = Jacquard(MetaValue.GetString(3), JacQueryReader.GetString(3));
+                            equalcheck = MetaValue.GetDouble(0) == JacQueryReader.GetDouble(0);
                         }
                         else
                         {
-                            MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = '" + reader.GetString(i+1) + "'", m_mbConnection);
+                            MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = '" + reader.GetString(i + 1) + "'", m_mbConnection);
                             MetaValue.Read();
                             s += MetaValue.GetDouble(1);
+                            J = Jacquard(MetaValue.GetString(3), JacQueryReader.GetString(3));
+                            equalcheck = MetaValue.GetString(0) == JacQueryReader.GetString(0);
                         }
-                        s *= reader.GetDouble(2);
+                        if (J < 0)
+                            if (equalcheck)
+                            {
+                                QF = MetaValue.GetDouble(2);
+                                J = 1;
+                            }
+                            else
+                                QF = 0;
+                        else
+                            QF = MetaValue.GetDouble(2);
+                        sum = s * QF * J;
                     }
-                    sum += s;
+                    else
+                    {
+                        if (i < 8)
+                            MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = " + reader.GetDouble(i + 1), m_mbConnection);
+                        else
+                            MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = '" + reader.GetString(i + 1) + "'", m_mbConnection);
+                        MetaValue.Read();
+                        missing[tuplenumber] += Math.Log10(MetaValue.GetDouble(2));
+                    }
                 }
                 scores[tuplenumber] = sum;
             }
         }
-
+        
         public static double Jacquard(string Wt, string Wq)
         {
-            if (Wt == "0" || Wq == "0")
-                return 1;
+            if (Wq == "none")
+                return -1;
 
             List<String> allvalues = new List<String>();
             string[] wvalues = Wt.Split(',');
