@@ -8,47 +8,40 @@ namespace DatabaseCode
 {
     class CEQHandler
     {
-        void ceqExecute(string input)
+        public static double Jacquard(string Wt, string Wq)
         {
-            try
+            if (Wt == "0" || Wq == "0")
+                return 1;
+
+            List<String> allvalues = new List<String>();
+            string[] wvalues = Wt.Split(',');
+            string[] qvalues = Wq.Split(',');
+
+            double amount = 0;
+            double total = 0;
+
+            for (int i=0; i<qvalues.Length-1; i++)
             {
-                SQLiteDataReader reader;
-                input = StringTrim(input);
-                int k = 10;
-                string[] splitted = input.Split(',');
-                StringBuilder s = new StringBuilder();
-                s.Append("SELECT * FROM autompg WHERE ");
-                foreach (string attribute in splitted)
+                string value = qvalues[i];
+                allvalues.Add(value);
+                total += Convert.ToInt32(value.Split(' ')[0]);
+            }
+
+            for (int i = 0; i < wvalues.Length - 1; i++)
+            {
+                string value = wvalues[i];
+                if (allvalues.Contains(value))
                 {
-                    if (s[s.Length - 1] != ' ')
-                        s.Append(" AND ");
-                    string[] tmpsplit = attribute.Split('=');
-                    if (tmpsplit[0] == "k")
-                        k = int.Parse(tmpsplit[1]);
-                    else
-                    {
-                        // top k zoeken
-                        s.Append(attribute);
-                    }
+                    amount += Convert.ToInt32(value.Split(' ')[0]);
                 }
-                reader = mb.ExecuteCommand(s.ToString(), m_dbConnection);
-                int counter = 1;
-                while (reader.Read())
+                else
                 {
-                    s.Clear();
-                    s.Append(counter + ": " + reader.GetDouble(1));
-                    for (int i = 1; i < 9; i++)
-                        s.Append(", " + reader.GetDouble(i));
-                    for (int i = 9; i < 12; i++)
-                        s.Append(", " + reader.GetString(i));
-                    Console.WriteLine(s.ToString());
-                    counter++;
+                    allvalues.Add(value);
+                    total += Convert.ToInt32(value.Split(' ')[0]);
                 }
             }
-            catch
-            {
-                Console.WriteLine("\nSomething went wrong when finding results,\nmake sure that the names have single quotes");
-            }
+
+            return (amount / total);
         }
     }
 }
