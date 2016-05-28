@@ -178,7 +178,7 @@ namespace DatabaseCode
             reader.Read();
             int count = reader.GetInt32(0);
             double[][] Values = new double[8][];
-            double[] Bandwiths = new double[8];
+            double[] bandwidths = new double[8];
             for (int i = 0; i < 8; i++)
                 Values[i] = new double[count];
             reader = ExecuteCommand("SELECT * FROM autompg", m_dbConnection);
@@ -201,13 +201,13 @@ namespace DatabaseCode
             }
             for (int i = 0; i < 8; i++)
             {
-                Bandwiths[i] = (double)1.06 * StandardDev(Values[i]) * (double)Math.Pow(count, -0.2);
+                bandwidths[i] = (double)1.06 * StandardDev(Values[i]) * (double)Math.Pow(count, -0.2);
                 for (int j = 0; j < count; j++)
                 {
                     double sum = 0;
                     for (int j2 = 0; j2 < count; j2++)
                     {
-                        sum += (double)Math.Pow(Math.E, (double)-0.5 * Math.Pow(((Values[i][j2] - Values[i][j]) / Bandwiths[i]), 2));
+                        sum += (double)Math.Pow(Math.E, (double)-0.5 * Math.Pow(((Values[i][j2] - Values[i][j]) / bandwidths[i]), 2));
                     }
                     AddToQFDictionary(ref IDFDictionary, ref max, tables[i], Values[i][j] + "", (double)Math.Log10(count / sum));
                     string name = Values[i][j].ToString();
@@ -216,7 +216,11 @@ namespace DatabaseCode
             }
             for (int i = 9; i < 12; i++)
                 foreach (KeyValuePair<string, double> PairSF in IDFDictionary[tables[i - 1]])
-                    EditTupleInDictionary(tables[i - 1], PairSF.Key, Math.Log10(count / PairSF.Value).ToString(), 1); 
+                    EditTupleInDictionary(tables[i - 1], PairSF.Key, Math.Log10(count / PairSF.Value).ToString(), 1);
+            for (int i=0; i<bandwidths.Length; i++)
+            {
+                /*Program.*/ExecuteCommand("INSERT INTO bandwidth VALUES ("+ i + ", " + bandwidths[i] +");", m_mbConnection);
+            }
         }
 
         void AddToQFDictionary(ref Dictionary<string, Dictionary<string, double>> d, ref Dictionary<string, double> max, string key1, string key2, double amount)
