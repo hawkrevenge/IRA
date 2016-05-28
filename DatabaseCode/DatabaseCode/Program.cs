@@ -37,19 +37,12 @@ namespace DatabaseCode
             if (File.Exists(Directory.GetCurrentDirectory() + "\\MyMetabase.sqlite"))
                 Connect(ref m_mbConnection, "MyMetabase.sqlite");
             else
-            {
                 Build(ref m_mbConnection, "MyMetabase.sqlite", "meta.sql");
-                mb = new Metabase(m_mbConnection, m_dbConnection);
-                mb.InsertAll();
-            }
-            Build(ref m_mbConnection, "MyMetabase.sqlite", "meta.sql");
-            mb = new Metabase(m_mbConnection,m_dbConnection);
-            mb.InsertAll();
-            handler = new CEQHandler(m_mbConnection, m_dbConnection);
+            mb = new Metabase(m_mbConnection, m_dbConnection);
+            handler = new CEQHandler(m_dbConnection, m_mbConnection);
             Console.Write("\nAwaiting command: ");
             while (TextCommand(Console.ReadLine())) { Console.Write("\nAwaiting command: "); }
         }
-
         void UseStandardDB(SQLiteConnection s, string fileName)
         {
             StreamReader reader = new StreamReader(fileName);
@@ -131,6 +124,9 @@ namespace DatabaseCode
             createNewDatabase(databaseLocation);
             Connect(ref connection, databaseLocation);
             UseStandardDB(connection, SQLFile);
+            mb = new Metabase(m_mbConnection, m_dbConnection);
+            mb.InsertAll();
+            handler = new CEQHandler(m_dbConnection, m_mbConnection);
         }
 
         void Disconnect(ref SQLiteConnection connection)

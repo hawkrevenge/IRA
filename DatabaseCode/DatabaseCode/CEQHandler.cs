@@ -21,72 +21,101 @@ namespace DatabaseCode
 
         public void ceqExecute(string input)
         {
-            try
+            SQLiteDataReader reader;
+            reader = Program.ExecuteCommand("SELECT * FROM bandwidth", m_mbConnection);
+            double[] Bandwiths = new double[8];
+            for (int i = 0; i < 8; i++)
             {
-                SQLiteDataReader reader;
-                reader = Program.ExecuteCommand("SELECT * FROM bandwith", m_mbConnection);
-                double[] Bandwiths = new double[8];
-                for(int i =0;i<8;i++)
-                {
-                    reader.Read();
-                    Bandwiths[i] = reader.GetDouble(1);
-                }
-                reader = Program.ExecuteCommand("SELECT COUNT(*) FROM autompg", m_dbConnection);
                 reader.Read();
-                int count = reader.GetInt32(0);
-                Dictionary<string, object> values = new Dictionary<string, object>();
-                input = StringTrim(input);
-                int k = 10;
-                string[] splitted = input.Split(',');
-                foreach (string attribute in splitted)
+                Bandwiths[i] = reader.GetDouble(1);
+            }
+            reader = Program.ExecuteCommand("SELECT COUNT(*) FROM autompg", m_dbConnection);
+            reader.Read();
+            int count = reader.GetInt32(0);
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            input = StringTrim(input);
+            int k = 10;
+            string[] splitted = input.Split(',');
+            foreach (string attribute in splitted)
+            {
+                string[] tmpsplit = attribute.Split('=');
+                if (tmpsplit[0] == "k")
+                    k = int.Parse(tmpsplit[1]);
+                else
                 {
-                    string[] tmpsplit = attribute.Split('=');
-                    if (tmpsplit[0] == "k")
-                        k = int.Parse(tmpsplit[1]);
-                    else
-                    {
-                        values.Add(tmpsplit[0], tmpsplit[1]);
-                    }
+                    values.Add(tmpsplit[0], tmpsplit[1]);
                 }
-                double[] scores = new double[count];
-                reader = Program.ExecuteCommand("SELECT * FROM autompg", m_dbConnection);
-                SQLiteDataReader MetaValue;
-               
-                for(int tuplenumber = 0; tuplenumber<count;tuplenumber++)
-                {
-                    reader.Read();
-                    double sum = 0;
-                    for(int i = 0; i<11;i++)
-                    {
-                        string table = Program.tables[i];
-                        double s = 0;
-                        if (values.ContainsKey(table))
-                        {
+            }
+            double[] scores = new double[count];
+            reader = Program.ExecuteCommand("SELECT * FROM autompg", m_dbConnection);
+            SQLiteDataReader MetaValue;
 
-                            if (i < 8)
-                            {
-                                MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = " + reader.GetDouble(i), m_mbConnection);
-                                MetaValue.Read();
-                                s += Math.Pow(Math.E, -0.5 * (Math.Pow((((double)values[table] - MetaValue.GetDouble(0)) / Bandwiths[i]),2)));
-                            }
-                            else
-                            {
-                                MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = '" + reader.GetString(i) + "'", m_mbConnection);
-                            }
-                            s *= reader.GetDouble(2);
+            for (int tuplenumber = 0; tuplenumber < count; tuplenumber++)
+            {
+                reader.Read();
+                double sum = 0;
+                for (int i = 0; i < 11; i++)
+                {
+                    string table = Program.tables[i];
+                    double s = 0;
+                    if (values.ContainsKey(table))
+                    {
+
+                        if (i < 8)
+                        {
+                            MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = " + reader.GetDouble(i+1), m_mbConnection);
                             MetaValue.Read();
-                            
+                            s += Math.Pow(Math.E, -0.5 * (Math.Pow((((double)values[table] - MetaValue.GetDouble(0)) / Bandwiths[i]), 2)))*MetaValue.GetDouble(1);
                         }
-                        sum += s;
+                        else
+                        {
+                            MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = '" + reader.GetString(i+1) + "'", m_mbConnection);
+                            MetaValue.Read();
+                            s += MetaValue.GetDouble(1);
+                        }
+                        s *= reader.GetDouble(2);
                     }
-                    scores[tuplenumber] = sum;
+                    sum += s;
+                }
+                scores[tuplenumber] = sum;
+            }
+        }
+
+        public static double Jacquard(string Wt, string Wq)
+        {
+            if (Wt == "0" || Wq == "0")
+                return 1;
+
+            List<String> allvalues = new List<String>();
+            string[] wvalues = Wt.Split(',');
+            string[] qvalues = Wq.Split(',');
+
+            double amount = 0;
+            double total = 0;
+
+            for (int i=0; i<qvalues.Length-1; i++)
+            {
+                string value = qvalues[i];
+                allvalues.Add(value);
+                total += Convert.ToInt32(value.Split(' ')[0]);
+            }
+
+            for (int i = 0; i < wvalues.Length - 1; i++)
+            {
+                string value = wvalues[i];
+                if (allvalues.Contains(value))
+                {
+                    amount += Convert.ToInt32(value.Split(' ')[0]);
+                }
+                else
+                {
+                    allvalues.Add(value);
+                    total += Convert.ToInt32(value.Split(' ')[0]);
                 }
                 
             }
-            catch
-            {
-                Console.WriteLine("\nSomething went wrong when finding results,\nmake sure that the names have single quotes");
-            }
+
+            return (amount / total);
         }
        private string StringTrim(string s)
         {
