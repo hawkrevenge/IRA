@@ -13,7 +13,7 @@ namespace DatabaseCode
     {
         public static Metabase instance;
         static String[] tables = { "mpg", "cylinders", "displacement", "horsepower", "weight", "acceleration", "model_year", "origin", "brand", "model", "type" };
-        Dictionary<string, Dictionary<object, Tuple<double, double, double>>> localDictionary;
+        Dictionary<string, Dictionary<object, Tuple<string, string, string>>> localDictionary;
 
         SQLiteConnection m_mbConnection;
         SQLiteConnection m_dbConnection;
@@ -24,33 +24,33 @@ namespace DatabaseCode
             m_mbConnection = connection;
             m_dbConnection = dbconnection;
 
-            localDictionary = new Dictionary<string, Dictionary<object, Tuple<double, double, double>>>();
+            localDictionary = new Dictionary<string, Dictionary<object, Tuple<string, string, string>>>();
             for (int i=0; i<tables.Length; i++)
             {
-                localDictionary[tables[i]] = new Dictionary<object, Tuple<double, double, double>>();
+                localDictionary[tables[i]] = new Dictionary<object, Tuple<string, string, string>>();
             }
         }
 
-        private void EditTupleInDictionary(string table, string key, double value, int index)
+        private void EditTupleInDictionary(string table, string key, string value, int index)
         {
-            Dictionary<object, Tuple<double, double, double>> tableDict = localDictionary[table];
+            Dictionary<object, Tuple<string, string, string>> tableDict = localDictionary[table];
             if (tableDict.ContainsKey(key))
             {
                 tableDict[key] = AddValueToTuple(tableDict[key], value, index);
             }
             else
             {
-                tableDict[key] = new Tuple<double, double, double>(
-                    index == 0 ? value : 0,
-                    index == 1 ? value : 0,
-                    index == 2 ? value : 0
+                tableDict[key] = new Tuple<string, string, string>(
+                    index == 0 ? value : "0",
+                    index == 1 ? value : "0",
+                    index == 2 ? value : "0"
                 );
             }
         }
 
-        private Tuple<double, double, double> AddValueToTuple(Tuple<double, double, double> tuple, double value, int index)
+        private Tuple<string, string, string> AddValueToTuple(Tuple<string, string, string> tuple, string value, int index)
         {
-            return new Tuple<double, double, double>(
+            return new Tuple<string, string, string>(
                 index == 0 ? value : tuple.Item1,
                 index == 1 ? value : tuple.Item2,
                 index == 2 ? value : tuple.Item3
@@ -60,13 +60,7 @@ namespace DatabaseCode
         public SQLiteDataReader ExecuteCommand(String s, SQLiteConnection connection)
         {
             SQLiteCommand command = new SQLiteCommand(s, connection);
-            //command.ExecuteNonQuery();
             return command.ExecuteReader();
-            //while (reader.Read())
-            //{
-            //    Console.WriteLine(reader.GetFloat(0));
-            //    //Console.WriteLine(reader.GetString(0));
-            //}
         }
 
         public void InsertAll()
@@ -76,8 +70,8 @@ namespace DatabaseCode
 
             foreach (String table in tables)
             {
-                Dictionary<object, Tuple<double, double, double>> tableDict = localDictionary[table];
-                foreach (KeyValuePair<object, Tuple<double, double, double>> tuple in tableDict)
+                Dictionary<object, Tuple<string, string, string>> tableDict = localDictionary[table];
+                foreach (KeyValuePair<object, Tuple<string, string, string>> tuple in tableDict)
                 {
                     string commandstring;
                     if (table == "brand" || table == "model" || table == "type")
@@ -94,15 +88,20 @@ namespace DatabaseCode
 
         public void InsertQF()
         {
-            Console.WriteLine("Calculating: QF-Values");
+            Console.WriteLine("Calculating: QF-Values and Attribute Similarity values");
             Dictionary<string, Dictionary<string, double>> QFDictionary = new Dictionary<string, Dictionary<string, double>>();
+            Dictionary<string, Dictionary<string, string>> ASDictionary = new Dictionary<string, Dictionary<string, string>>();
             StreamReader reader = new StreamReader("workload.txt");
             reader.ReadLine(); reader.ReadLine();
-            string line; int n; string[] splitted; // predefined variables
+            // predefined variables
+            string line;
+            int n;
+            string[] splitted;
             Dictionary<string, double> max = new Dictionary<string, double>();
+            int i = 1;
             while ((line = reader.ReadLine()) != "" && line != null)
             {
-                // splits the amounnt and the query
+                // splits the amount and the query
                 splitted = Regex.Split(line, " times: ");
                 n = int.Parse(splitted[0]);
                 //splits each attribute
@@ -118,8 +117,9 @@ namespace DatabaseCode
                         string key = tmps[0];
                         foreach (string s2 in tmps[1].Split(','))
                         {
-                            string trimmed = s2.TrimEnd('0').TrimEnd('.');
-                            AddtoDictionary(ref QFDictionary, ref max, key, trimmed, n);
+                            //string trimmed = s2.TrimEnd('0').TrimEnd('.');
+                            AddToQFDictionary(ref QFDictionary, ref max, key, s2, n);
+                            AddToASDictionary(ref ASDictionary, key, s2, n + " q" + i + ","); // AS values look like this: 95 q4, 20 q60, 13 q70,
                         }
                     }
                     else
@@ -127,20 +127,28 @@ namespace DatabaseCode
                         string[] tmps = StringTrim(s).Split('=');
                         {
                             string trimmed = tmps[1].TrimEnd('0').TrimEnd('.');
-                            AddtoDictionary(ref QFDictionary, ref max, tmps[0],trimmed, n);
+                            AddToQFDictionary(ref QFDictionary, ref max, tmps[0],trimmed, n);
                         }
                     }
                 }
+                i++;
             }
             foreach (KeyValuePair<string, Dictionary<string, double>> PairSD in QFDictionary)
             {
                 double maxValue = max[PairSD.Key];
                 foreach (KeyValuePair<string, double> PairSI in PairSD.Value)
                 {
-                    EditTupleInDictionary(PairSD.Key, PairSI.Key, PairSI.Value/maxValue, 0);
+                    EditTupleInDictionary(PairSD.Key, PairSI.Key, (PairSI.Value/maxValue).ToString(), 0);
                 }
             }
-            Console.WriteLine("executed: QF-Values");
+            foreach (KeyValuePair<string, Dictionary<string, string>> pairSD in ASDictionary)
+            {
+                foreach(KeyValuePair<string, string> PairSI in pairSD.Value)
+                {
+                    EditTupleInDictionary(pairSD.Key, PairSI.Key, "\'"+PairSI.Value+"\'", 2);
+                }
+            }
+            Console.WriteLine("executed: QF-Values and Attribute Similarity values");
         }
 
         double StandardDev(double[] Ti)
@@ -180,7 +188,7 @@ namespace DatabaseCode
                 for (int i = 9; i < 12; i++)
                 {
                     string name = reader.GetString(i);
-                    AddtoDictionary(ref IDFDictionary, ref max, tables[i - 1], name, 1);
+                    AddToQFDictionary(ref IDFDictionary, ref max, tables[i - 1], name, 1);
                 }
                 counter++;
             }
@@ -194,17 +202,17 @@ namespace DatabaseCode
                     {
                         sum += (double)Math.Pow(Math.E, (double)-0.5 * Math.Pow(((Values[i][j2] - Values[i][j]) / Bandwiths[i]), 2));
                     }
-                    AddtoDictionary(ref IDFDictionary, ref max, tables[i], Values[i][j] + "", (double)Math.Log10(count / sum));
+                    AddToQFDictionary(ref IDFDictionary, ref max, tables[i], Values[i][j] + "", (double)Math.Log10(count / sum));
                     string name = Values[i][j].ToString();
-                    EditTupleInDictionary(tables[i], name, (double)Math.Log10(count / sum), 1);
+                    EditTupleInDictionary(tables[i], name, Math.Log10(count / sum).ToString(), 1);
                 }
             }
             for (int i = 9; i < 12; i++)
                 foreach (KeyValuePair<string, double> PairSF in IDFDictionary[tables[i - 1]])
-                    EditTupleInDictionary(tables[i - 1], PairSF.Key, (double)Math.Log10(count / PairSF.Value), 1); 
+                    EditTupleInDictionary(tables[i - 1], PairSF.Key, Math.Log10(count / PairSF.Value).ToString(), 1); 
         }
 
-        void AddtoDictionary(ref Dictionary<string, Dictionary<string, double>> d, ref Dictionary<string, double> max, string key1, string key2, double amount)
+        void AddToQFDictionary(ref Dictionary<string, Dictionary<string, double>> d, ref Dictionary<string, double> max, string key1, string key2, double amount)
         {
             if (!d.ContainsKey(key1))
                 d.Add(key1, new Dictionary<string, double>());
@@ -216,6 +224,16 @@ namespace DatabaseCode
                 max.Add(key1, d[key1][key2]);
             else if (d[key1][key2] > max[key1])
                 max[key1] = d[key1][key2];
+        }
+
+        void AddToASDictionary(ref Dictionary<string, Dictionary<string, string>> d, string key1, string key2, string value)
+        {
+            if (!d.ContainsKey(key1))
+                d.Add(key1, new Dictionary<string, string>());
+            if (!d[key1].ContainsKey(key2))
+                d[key1].Add(key2, value);
+            else
+                d[key1][key2] += value;
         }
 
         private string StringTrim(string s)
