@@ -23,11 +23,11 @@ namespace DatabaseCode
         {
             SQLiteDataReader reader;
             reader = Program.ExecuteCommand("SELECT * FROM bandwidth", m_mbConnection);
-            double[] Bandwiths = new double[8];
+            double[] bandwidths = new double[8];
             for (int i = 0; i < 8; i++)
             {
                 reader.Read();
-                Bandwiths[i] = reader.GetDouble(1);
+                bandwidths[i] = reader.GetDouble(1);
             }
             reader = Program.ExecuteCommand("SELECT COUNT(*) FROM autompg", m_dbConnection);
             reader.Read();
@@ -46,16 +46,18 @@ namespace DatabaseCode
                     values.Add(tmpsplit[0], tmpsplit[1]);
                 }
             }
-            double[] scores = new double[count];
-            double[] missing = new double[count];
+            List<Tuple<int, double, double>> tuples = new List<Tuple<int, double, double>>();
+            //double[] scores = new double[count];
+            //double[] missing = new double[count];
             reader = Program.ExecuteCommand("SELECT * FROM autompg", m_dbConnection);
             SQLiteDataReader MetaValue;
 
             for (int tuplenumber = 0; tuplenumber < count; tuplenumber++)
             {
-                missing[tuplenumber] = 0;
+                //missing[tuplenumber] = 0;
                 reader.Read();
-                double sum = 0;
+                double scoresSum = 0;
+                double missingSum = 0;
                 for (int i = 0; i < 11; i++)
                 {
                     string table = Program.tables[i];
@@ -72,7 +74,7 @@ namespace DatabaseCode
                         {
                             MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = " + reader.GetDouble(i + 1), m_mbConnection);
                             MetaValue.Read();
-                            s += Math.Pow(Math.E, -0.5 * (Math.Pow(((Convert.ToDouble(values[table]) - MetaValue.GetDouble(0)) / Bandwiths[i]), 2))) * MetaValue.GetDouble(1);
+                            s += Math.Pow(Math.E, -0.5 * (Math.Pow(((Convert.ToDouble(values[table]) - MetaValue.GetDouble(0)) / bandwidths[i]), 2))) * MetaValue.GetDouble(1);
                             J = Jacquard(MetaValue.GetString(3), JacQueryReader.GetString(3));
                             equalcheck = MetaValue.GetDouble(0) == JacQueryReader.GetDouble(0);
                         }
@@ -94,7 +96,7 @@ namespace DatabaseCode
                                 QF = 0;
                         else
                             QF = MetaValue.GetDouble(2);
-                        sum = s * QF * J;
+                        scoresSum = s * QF * J;
                     }
                     else
                     {
@@ -103,11 +105,24 @@ namespace DatabaseCode
                         else
                             MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = '" + reader.GetString(i + 1) + "'", m_mbConnection);
                         MetaValue.Read();
-                        missing[tuplenumber] += Math.Log10(MetaValue.GetDouble(2));
+                        missingSum += Math.Log10(MetaValue.GetDouble(2));
                     }
                 }
-                scores[tuplenumber] = sum;
+                tuples.Add(new Tuple<int, double, double>(tuplenumber, scoresSum, missingSum));
             }
+            tuples.Sort(CompareTuple);
+            for (int i = 0; i < tuples.Count; i++)
+            {
+                Console.WriteLine(tuples[i].Item1 + " " + tuples[i].Item2 + " " + tuples[i].Item3);
+            }
+        }
+
+        private int CompareTuple(Tuple<int, double, double> t1, Tuple<int, double, double> t2)
+        {
+            if (t1.Item2.CompareTo(t2.Item2) != 0)
+                return -t1.Item2.CompareTo(t2.Item2);
+            else
+                return -t1.Item3.CompareTo(t2.Item3);
         }
         
         public static double Jacquard(string Wt, string Wq)
