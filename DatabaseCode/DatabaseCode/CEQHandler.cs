@@ -122,9 +122,13 @@ namespace DatabaseCode
                 tuples.Add(new Tuple<int, double, double>(tuplenumber, scoresSum, missingSum));
             }
             tuples.Sort(CompareTuple);
-            for (int i = 0; i < tuples.Count; i++)
+            for (int i = 0; i < k; i++)
             {
-                Console.WriteLine(tuples[i].Item1 + " " + tuples[i].Item2 + " " + tuples[i].Item3);
+                StringBuilder s = new StringBuilder();
+                s.Append(tuples[i].Item1);
+                for (int t = 1; t < 12; t++)
+                    s.Append(", " + dbSets[tuples[i].Item1, t]);
+                Console.WriteLine(s.ToString());
             }
         }
 
