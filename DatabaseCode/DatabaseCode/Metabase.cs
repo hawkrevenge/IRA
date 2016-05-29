@@ -11,16 +11,15 @@ namespace DatabaseCode
 {
     class Metabase
     {
-        public static Metabase instance;
         public static Dictionary<string, double> QFmax = new Dictionary<string, double>();
         Dictionary<string, Dictionary<object, Tuple<string, string, string>>> localDictionary;
 
         SQLiteConnection m_mbConnection;
         SQLiteConnection m_dbConnection;
 
+        //Constructor - save the connections and initialize the local dictionary that will contain all QF, IDF, AS values
         public Metabase(SQLiteConnection connection, SQLiteConnection dbconnection)
         {
-            instance = this;
             m_mbConnection = connection;
             m_dbConnection = dbconnection;
 
@@ -31,6 +30,8 @@ namespace DatabaseCode
             }
         }
 
+        //Makes or edits a tuple in the local dictionary of a certain table
+        //Table = table index, Key = SQL table key (e.g. 18 for mpg=18), value = QF/IDF/AS value, index = 0/1/2 for QF/IDF/AS
         private void EditTupleInDictionary(string table, string key, string value, int index)
         {
             Dictionary<object, Tuple<string, string, string>> tableDict = localDictionary[table];
@@ -49,6 +50,7 @@ namespace DatabaseCode
             }
         }
 
+        //Edit a local dictionary tuple
         private Tuple<string, string, string> AddValueToTuple(Tuple<string, string, string> tuple, string value, int index)
         {
             return new Tuple<string, string, string>(
@@ -58,11 +60,10 @@ namespace DatabaseCode
             );
         }
 
-
-
+        //Calculate all QF, IDF and AS values, and place them in the metadatabase
         public void InsertAll()
         {
-            InsertQF();
+            InsertQFandAS();
             InsertIDF();
 
             foreach (String table in Program.tables)
@@ -83,7 +84,8 @@ namespace DatabaseCode
             }
         }
 
-        public void InsertQF()
+        //calculate and save QF and AS values from the workload
+        public void InsertQFandAS()
         {
             Console.WriteLine("Calculating: QF-Values and Attribute Similarity values");
             Dictionary<string, Dictionary<string, double>> QFDictionary = new Dictionary<string, Dictionary<string, double>>();
@@ -115,7 +117,7 @@ namespace DatabaseCode
                         {
                             //string trimmed = s2.TrimEnd('0').TrimEnd('.');
                             AddToQFDictionary(ref QFDictionary, ref QFmax, key, s2, n);
-                            AddToASDictionary(ref ASDictionary, key, s2, n + " q" + i + ","); // AS values look like this: 95 q4, 20 q60, 13 q70,
+                            AddToASDictionary(ref ASDictionary, key, s2, n + " q" + i + ","); // AS values look like this: 31 q44,13 q68,
                         }
                     }
                     else
@@ -153,6 +155,7 @@ namespace DatabaseCode
             Console.WriteLine("executed: QF-Values and Attribute Similarity values");
         }
 
+        //Calculate standard deviation of a list of values
         double StandardDev(double[] Ti)
         {
             double Mean = 0;
@@ -167,6 +170,7 @@ namespace DatabaseCode
             return (double)Math.Sqrt(Var);
         }
 
+        //Calculate and save IDF values from the database, and save bandwidth values to the metadatabase
         void InsertIDF()
         {
             SQLiteDataReader reader = Program.ExecuteCommand("SELECT COUNT(*) FROM autompg", m_dbConnection);

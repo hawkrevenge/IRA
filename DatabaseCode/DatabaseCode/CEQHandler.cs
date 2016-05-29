@@ -16,6 +16,8 @@ namespace DatabaseCode
         static int count;
         static double[] Bandwidths;
         static object[,] dbSets;
+        
+        //Initalize the handler with connections, and make a local copy of the database & bandwidths
         public CEQHandler(SQLiteConnection dataConnection, SQLiteConnection metaConnection)
         {
             SQLiteDataReader reader;
@@ -45,9 +47,10 @@ namespace DatabaseCode
             }
         }
 
-
+        //Compare, rank and display documents w.r.t. a CEQ
         public void ceqExecute(string input)
         {
+            //Split the CEQ
             Dictionary<string, object> values = new Dictionary<string, object>();
             input = StringTrim(input);
             int k = 10;
@@ -62,6 +65,8 @@ namespace DatabaseCode
                     values.Add(tmpsplit[0], tmpsplit[1]);
                 }
             }
+
+            //Query QF, IDF and AS values from the metadatabase, calculate the document score, and save it to the list of tuples as (index, score, missing attribute score)
             List<Tuple<int, double, double>> tuples = new List<Tuple<int, double, double>>();
             SQLiteDataReader MetaValue;
             for (int tuplenumber = 0; tuplenumber < count; tuplenumber++)
@@ -79,12 +84,11 @@ namespace DatabaseCode
                         double J;
                         SQLiteDataReader JacQueryReader;
                         JacQueryReader = Program.ExecuteCommand("Select * From " + table + " Where id = " + values[table], m_mbConnection);
-                        JacQueryReader.Read();
                         bool equalcheck;
                         if (i < 8)
                         {
                             MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = " + Convert.ToDouble(dbSets[tuplenumber, i + 1]), m_mbConnection);
-                            //MetaValue.Read();
+                            MetaValue.Read();
                             if (!JacQueryReader.Read())
                                 continue;
                             IDFs = Math.Pow(Math.E, -0.5 * (Math.Pow(((MetaValue.GetDouble(0) - Convert.ToDouble(values[table])) / Bandwidths[i]), 2))) * JacQueryReader.GetDouble(1);
@@ -117,6 +121,7 @@ namespace DatabaseCode
                 }
                 tuples.Add(new Tuple<int, double, double>(tuplenumber, scoresSum, missingSum));
             }
+            //Sort the tuples using CompareTuple
             tuples.Sort(CompareTuple);
             for (int i = 0; i < k; i++)
             {
@@ -128,6 +133,7 @@ namespace DatabaseCode
             }
         }
 
+        //Compares tuples based on score - if they are equal, break the tie using missing attribute score
         private int CompareTuple(Tuple<int, double, double> t1, Tuple<int, double, double> t2)
         {
             if (t1.Item2.CompareTo(t2.Item2) != 0)
@@ -136,18 +142,21 @@ namespace DatabaseCode
                 return -t1.Item3.CompareTo(t2.Item3);
         }
         
+        //Jacquard function finds the overlap of queries between a set of queries Wt and Wq, and calculates overlap / union
         public static double Jacquard(string Wt, string Wq)
         {
             if (Wq == "none")
                 return 1;
 
             List<String> allvalues = new List<String>();
+            //because AS-strings always end in , the last element in the array will be "". This is why we loop over values.length-1 later
             string[] wvalues = Wt.Split(',');
             string[] qvalues = Wq.Split(',');
 
             double amount = 0;
             double total = 0;
 
+            //All qvalues must be in the union, so the total contains all their query amounts
             for (int i=0; i<qvalues.Length-1; i++)
             {
                 string value = qvalues[i];
@@ -158,10 +167,12 @@ namespace DatabaseCode
             for (int i = 0; i < wvalues.Length - 1; i++)
             {
                 string value = wvalues[i];
+                //All wvalues that are already in q must be in the overlap, so the amount contains all their query amounts
                 if (allvalues.Contains(value))
                 {
                     amount += Convert.ToInt32(value.Split(' ')[0]);
                 }
+                //Otherwise, they are not in q but are in the union, so the total contains all their query amounts
                 else
                 {
                     allvalues.Add(value);
@@ -172,7 +183,8 @@ namespace DatabaseCode
 
             return (amount / total);
         }
-       private string StringTrim(string s)
+
+        private string StringTrim(string s)
         {
             StringBuilder builder = new StringBuilder();
             string trimChars = " )(;";
