@@ -85,9 +85,8 @@ namespace DatabaseCode
                         {
                             MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = " + Convert.ToDouble(dbSets[tuplenumber, i + 1]), m_mbConnection);
                             MetaValue.Read();
-                            IDFs = Math.Pow(Math.E, -0.5 * (Math.Pow(((Convert.ToDouble(values[table]) - MetaValue.GetDouble(0)) / Bandwidths[i]), 2))) * MetaValue.GetDouble(1);
-
-                            equalcheck = MetaValue.GetDouble(0) == JacQueryReader.GetDouble(0);
+                            IDFs = Math.Pow(Math.E, -0.5 * (Math.Pow(((MetaValue.GetDouble(0) - Convert.ToDouble(values[table])) / Bandwidths[i]), 2))) * JacQueryReader.GetDouble(1);
+                            equalcheck = true;
                         }
                         else
                         {
