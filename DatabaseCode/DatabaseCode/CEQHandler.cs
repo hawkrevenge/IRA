@@ -36,7 +36,8 @@ namespace DatabaseCode
             for (int tuplenumber = 0; tuplenumber < count; tuplenumber++)
             {
                 reader.Read();
-                for (int i = 0; i < 12; i++)
+                dbSets[tuplenumber, 0] = tuplenumber;
+                for (int i = 1; i < 12; i++)
                     if (i < 9)
                         dbSets[tuplenumber, i] = reader.GetDouble(i);
                     else
