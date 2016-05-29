@@ -84,14 +84,17 @@ namespace DatabaseCode
                         if (i < 8)
                         {
                             MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = " + Convert.ToDouble(dbSets[tuplenumber, i + 1]), m_mbConnection);
-                            MetaValue.Read();
+                            //MetaValue.Read();
+                            if (!JacQueryReader.Read())
+                                continue;
                             IDFs = Math.Pow(Math.E, -0.5 * (Math.Pow(((MetaValue.GetDouble(0) - Convert.ToDouble(values[table])) / Bandwidths[i]), 2))) * JacQueryReader.GetDouble(1);
                             equalcheck = true;
                         }
                         else
                         {
                             MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = '" + dbSets[tuplenumber, i + 1] + "'", m_mbConnection);
-                            MetaValue.Read();
+                            if (!MetaValue.Read() || !JacQueryReader.Read())
+                                continue;
                             IDFs = MetaValue.GetDouble(1);
                             equalcheck = MetaValue.GetString(0) == JacQueryReader.GetString(0);
                         }
