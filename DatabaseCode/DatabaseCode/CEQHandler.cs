@@ -61,15 +61,13 @@ namespace DatabaseCode
                     values.Add(tmpsplit[0], tmpsplit[1]);
                 }
             }
-            double[] scores = new double[count];
-            double[] missing = new double[count];
-
+            List<Tuple<int, double, double>> tuples = new List<Tuple<int, double, double>>();
             SQLiteDataReader MetaValue;
-
             for (int tuplenumber = 0; tuplenumber < count; tuplenumber++)
             {
-                missing[tuplenumber] = 0;
-                double sum = 0;
+                double scoresSum = 0;
+                double missingSum = 0;
+
                 for (int i = 0; i < 11; i++)
                 {
                     string table = Program.tables[i];
@@ -108,7 +106,7 @@ namespace DatabaseCode
                                 QF = 0;
                         else
                             QF = MetaValue.GetDouble(2);
-                        sum = s * QF * J;
+                        scoresSum = s * QF * J;
                     }
                     else
                     {
@@ -117,11 +115,24 @@ namespace DatabaseCode
                         else
                             MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = '" + dbSets[tuplenumber, i + 1] + "'", m_mbConnection);
                         MetaValue.Read();
-                        missing[tuplenumber] += Math.Log10(MetaValue.GetDouble(2));
+                        missingSum += Math.Log10(MetaValue.GetDouble(2));
                     }
                 }
-                scores[tuplenumber] = sum;
+                tuples.Add(new Tuple<int, double, double>(tuplenumber, scoresSum, missingSum));
             }
+            tuples.Sort(CompareTuple);
+            for (int i = 0; i < tuples.Count; i++)
+            {
+                Console.WriteLine(tuples[i].Item1 + " " + tuples[i].Item2 + " " + tuples[i].Item3);
+            }
+        }
+
+        private int CompareTuple(Tuple<int, double, double> t1, Tuple<int, double, double> t2)
+        {
+            if (t1.Item2.CompareTo(t2.Item2) != 0)
+                return -t1.Item2.CompareTo(t2.Item2);
+            else
+                return -t1.Item3.CompareTo(t2.Item3);
         }
         
         public static double Jacquard(string Wt, string Wq)
