@@ -142,7 +142,7 @@ namespace DatabaseCode
                 return -t1.Item3.CompareTo(t2.Item3);
         }
         
-        //Jacquard function finds the overlap of queries between a set of queries Wt and Wq, and calculates overlap / union
+        //Jacquard function finds the intersection of queries between a set of queries Wt and Wq, and calculates intersection / union
         public static double Jacquard(string Wt, string Wq)
         {
             if (Wq == "none")
@@ -167,7 +167,7 @@ namespace DatabaseCode
             for (int i = 0; i < wvalues.Length - 1; i++)
             {
                 string value = wvalues[i];
-                //All wvalues that are already in q must be in the overlap, so the amount contains all their query amounts
+                //All wvalues that are already in q must be in the intersection, so the amount contains all their query amounts
                 if (allvalues.Contains(value))
                 {
                     amount += Convert.ToInt32(value.Split(' ')[0]);
