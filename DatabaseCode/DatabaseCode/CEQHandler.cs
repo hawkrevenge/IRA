@@ -13,25 +13,40 @@ namespace DatabaseCode
     {
         SQLiteConnection m_dbConnection;
         SQLiteConnection m_mbConnection;
+        static int count;
+        static double[] Bandwidths;
+        static object[,] dbSets;
         public CEQHandler(SQLiteConnection dataConnection, SQLiteConnection metaConnection)
         {
+            SQLiteDataReader reader;
             m_dbConnection = dataConnection;
             m_mbConnection = metaConnection;
-        }
-
-        public void ceqExecute(string input)
-        {
-            SQLiteDataReader reader;
+            reader = Program.ExecuteCommand("SELECT COUNT(*) FROM autompg", m_dbConnection);
+            reader.Read();
+            count = reader.GetInt32(0);
             reader = Program.ExecuteCommand("SELECT * FROM bandwidth", m_mbConnection);
-            double[] Bandwiths = new double[8];
+            Bandwidths = new double[8];
             for (int i = 0; i < 8; i++)
             {
                 reader.Read();
-                Bandwiths[i] = reader.GetDouble(1);
+                Bandwidths[i] = reader.GetDouble(1);
             }
-            reader = Program.ExecuteCommand("SELECT COUNT(*) FROM autompg", m_dbConnection);
-            reader.Read();
-            int count = reader.GetInt32(0);
+            reader = Program.ExecuteCommand("SELECT * FROM autompg", m_dbConnection);
+            dbSets = new object[count, 12];
+            for (int tuplenumber = 0; tuplenumber < count; tuplenumber++)
+            {
+                reader.Read();
+                for (int i = 0; i < 12; i++)
+                    if (i < 9)
+                        dbSets[tuplenumber, i] = reader.GetDouble(i);
+                    else
+                        dbSets[tuplenumber, i] = reader.GetString(i);
+            }
+        }
+
+
+        public void ceqExecute(string input)
+        {
             Dictionary<string, object> values = new Dictionary<string, object>();
             input = StringTrim(input);
             int k = 10;
@@ -48,13 +63,12 @@ namespace DatabaseCode
             }
             double[] scores = new double[count];
             double[] missing = new double[count];
-            reader = Program.ExecuteCommand("SELECT * FROM autompg", m_dbConnection);
+
             SQLiteDataReader MetaValue;
 
             for (int tuplenumber = 0; tuplenumber < count; tuplenumber++)
             {
                 missing[tuplenumber] = 0;
-                reader.Read();
                 double sum = 0;
                 for (int i = 0; i < 11; i++)
                 {
@@ -70,15 +84,15 @@ namespace DatabaseCode
                         bool equalcheck;
                         if (i < 8)
                         {
-                            MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = " + reader.GetDouble(i + 1), m_mbConnection);
+                            MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = " + Convert.ToDouble(dbSets[tuplenumber, i + 1]), m_mbConnection);
                             MetaValue.Read();
-                            s += Math.Pow(Math.E, -0.5 * (Math.Pow(((Convert.ToDouble(values[table]) - MetaValue.GetDouble(0)) / Bandwiths[i]), 2))) * MetaValue.GetDouble(1);
+                            s += Math.Pow(Math.E, -0.5 * (Math.Pow(((Convert.ToDouble(values[table]) - MetaValue.GetDouble(0)) / Bandwidths[i]), 2))) * MetaValue.GetDouble(1);
                             J = Jacquard(MetaValue.GetString(3), JacQueryReader.GetString(3));
                             equalcheck = MetaValue.GetDouble(0) == JacQueryReader.GetDouble(0);
                         }
                         else
                         {
-                            MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = '" + reader.GetString(i + 1) + "'", m_mbConnection);
+                            MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = '" + dbSets[tuplenumber, i + 1] + "'", m_mbConnection);
                             MetaValue.Read();
                             s += MetaValue.GetDouble(1);
                             J = Jacquard(MetaValue.GetString(3), JacQueryReader.GetString(3));
@@ -99,9 +113,9 @@ namespace DatabaseCode
                     else
                     {
                         if (i < 8)
-                            MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = " + reader.GetDouble(i + 1), m_mbConnection);
+                            MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = " + Convert.ToDouble(dbSets[tuplenumber, i + 1]), m_mbConnection);
                         else
-                            MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = '" + reader.GetString(i + 1) + "'", m_mbConnection);
+                            MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = '" + dbSets[tuplenumber, i + 1] + "'", m_mbConnection);
                         MetaValue.Read();
                         missing[tuplenumber] += Math.Log10(MetaValue.GetDouble(2));
                     }
