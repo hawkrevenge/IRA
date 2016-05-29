@@ -72,7 +72,7 @@ namespace DatabaseCode
                 for (int i = 0; i < 11; i++)
                 {
                     string table = Program.tables[i];
-                    double s = 0;
+                    double IDFs = 0;
                     if (values.ContainsKey(table))
                     {
                         double QF;
@@ -85,14 +85,15 @@ namespace DatabaseCode
                         {
                             MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = " + Convert.ToDouble(dbSets[tuplenumber, i + 1]), m_mbConnection);
                             MetaValue.Read();
-                            s += Math.Pow(Math.E, -0.5 * (Math.Pow(((Convert.ToDouble(values[table]) - MetaValue.GetDouble(0)) / Bandwidths[i]), 2))) * JacQueryReader.GetDouble(1);
+                            IDFs = Math.Pow(Math.E, -0.5 * (Math.Pow(((Convert.ToDouble(values[table]) - MetaValue.GetDouble(0)) / Bandwidths[i]), 2))) * MetaValue.GetDouble(1);
+
                             equalcheck = MetaValue.GetDouble(0) == JacQueryReader.GetDouble(0);
                         }
                         else
                         {
                             MetaValue = Program.ExecuteCommand("Select * From " + table + " Where id = '" + dbSets[tuplenumber, i + 1] + "'", m_mbConnection);
                             MetaValue.Read();
-                            s += JacQueryReader.GetDouble(1);
+                            IDFs = MetaValue.GetDouble(1);
                             equalcheck = MetaValue.GetString(0) == JacQueryReader.GetString(0);
                         }
                         J = Jacquard(MetaValue.GetString(3), JacQueryReader.GetString(3));
@@ -100,7 +101,7 @@ namespace DatabaseCode
                             QF = JacQueryReader.GetDouble(2);
                         else
                             QF = 0;
-                        scoresSum += s * QF * J;
+                        scoresSum += IDFs * QF * J;
                     }
                     else
                     {
