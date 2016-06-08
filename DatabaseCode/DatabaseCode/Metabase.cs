@@ -66,20 +66,24 @@ namespace DatabaseCode
             InsertQFandAS();
             InsertIDF();
 
-            foreach (String table in Program.tables)
+            using (System.IO.StreamWriter file = new StreamWriter("metaload.txt"))
             {
-                Dictionary<object, Tuple<string, string, string>> tableDict = localDictionary[table];
-                foreach (KeyValuePair<object, Tuple<string, string, string>> tuple in tableDict)
+                foreach (String table in Program.tables)
                 {
-                    string commandstring;
-                    if (table == "brand" || table == "model" || table == "type")
-                        commandstring = "INSERT INTO " + table + " VALUES (\'" + tuple.Key + "\', ";
-                    else
-                        commandstring = "INSERT INTO " + table + " VALUES (" + tuple.Key + ", ";
+                    Dictionary<object, Tuple<string, string, string>> tableDict = localDictionary[table];
+                    foreach (KeyValuePair<object, Tuple<string, string, string>> tuple in tableDict)
+                    {
+                        string commandstring;
+                        if (table == "brand" || table == "model" || table == "type")
+                            commandstring = "INSERT INTO " + table + " VALUES (\'" + tuple.Key + "\', ";
+                        else
+                            commandstring = "INSERT INTO " + table + " VALUES (" + tuple.Key + ", ";
 
-                    commandstring += tuple.Value.Item1 + ", " + tuple.Value.Item2 + ", " + tuple.Value.Item3 + ")";
-                    Console.WriteLine("executing: " + commandstring);
-                    Program.ExecuteCommand(commandstring, m_mbConnection);
+                        commandstring += tuple.Value.Item1 + ", " + tuple.Value.Item2 + ", " + tuple.Value.Item3 + ")";
+                        Console.WriteLine("executing: " + commandstring);
+                        file.WriteLine(commandstring);
+                        Program.ExecuteCommand(commandstring, m_mbConnection);
+                    }
                 }
             }
         }

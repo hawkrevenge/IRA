@@ -41,7 +41,7 @@ namespace DatabaseCode
                 Connect(ref m_mbConnection, "MyMetabase.sqlite");
             else
             {
-                Build(ref m_mbConnection, "MyMetabase.sqlite", "meta.sql");
+                Build(ref m_mbConnection, "MyMetabase.sqlite", "metadb.txt");
                 mb = new Metabase(m_mbConnection, m_dbConnection);
                 mb.InsertAll();
             }
@@ -85,7 +85,7 @@ namespace DatabaseCode
             {
                 Console.WriteLine("rebuilding metabase");
                 Disconnect(ref m_mbConnection);
-                Build(ref m_mbConnection, "MyMetabase.sqlite", "meta.sql");
+                Build(ref m_mbConnection, "MyMetabase.sqlite", "metadb.txt");
                 mb = new Metabase(m_mbConnection, m_dbConnection);
                 mb.InsertAll();
                 handler = new CEQHandler(m_dbConnection, m_mbConnection);
@@ -104,7 +104,7 @@ namespace DatabaseCode
                 Console.WriteLine("-Typing help returns the usable commands.");
                 Console.WriteLine("-Typing a ceq will return the top-k results where the default k = 10, ending with a semicolon.");
                 Console.WriteLine("-Typing rebuildData will rebuild the database using the autompg.sql file.");
-                Console.WriteLine("-Typing rebuildMeta will rebuild the meta-database using the Meta.sql and workload.txt files.");
+                Console.WriteLine("-Typing rebuildMeta will rebuild the meta-database using the metadb.txt and workload.txt files.");
                 Console.WriteLine("-Typing quit will exit the program.");
             }
             //Handle queries
@@ -150,7 +150,8 @@ namespace DatabaseCode
         //Disconnect from a database
         void Disconnect(ref SQLiteConnection connection)
         {
-            connection.Close();
+            if (connection != null)
+                connection.Close();
         }
 
         //Disconnect from all databases we use
