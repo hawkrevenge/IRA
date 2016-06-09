@@ -3,44 +3,44 @@ library("tau")
 library("tm")
 library("MASS")
 library("nnet")
+library("e1071") #heeft naive bayes functie kan handig zijn(?)
 
+
+#heb werkelijk geen idee hoe we moeten beginnen tbh.
 Main<- function(){
   #start het programma
   #head(description)
   if(checkFunc())
     ReadInfunc()
-
+  allterms<- all.queryterms(queries$search_term,queries$product_title)
+  
+  #werkelijk geen idee wat ik hier doe maar dit komt uit de slides
+  #zit ook nog te denken hoe we dus gaan gokken
+  qp.dat<-data.frame(relevance=queries$relevance,allterms=allterms)
+  tr.index<-sample(length(queries$search_term),50000)
+  qp.lm<-lm(relevance~allterms,data=qp.dat[tr.index,])
+  summary(qp.lm)
 }
+
+#functie om lengtes te vergelijken
 equallength<-function(x,y)
 {
   x==y
 }
 
+#kijken of alle woorden voorkomen in de titel(en ook geen anderen heeft)
 all.queryterms <- function (queries,docs)
 {
   a<-sapply(queries, method="string",n=1L, textcnt)
   b<-sapply(sapply(docs, method="string",n=1L, textcnt), names)
   c<-mapply(intersect,sapply(a,names),b)
   feature<- sapply((mapply(equallength,sapply(a,length),sapply(c,length))), as.numeric)
-  #n <- length(queries)
-  #feature <- vector(length=n)
-  #for(i in 1:n){
-  #  query <- queries[i]
-  #  document <- docs[i]
-  #  a <- textcnt(query,method="string",n=1L)
-  #  b <- textcnt(document,method="string",n=1L)
-  #  c <- intersect(names(a), names(b))
-  #  feature[i] <- as.numeric(length(a)==length(c))}
   feature
 }
 
 test<-function(){
   summary(all.queryterms(queries$search_term, queries$product_title))
 }
-
-
-
-
 
 
 ReadInfunc<- function(){
