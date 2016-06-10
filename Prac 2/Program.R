@@ -71,15 +71,30 @@ test<-function(){
   summary(all.queryterms(queries$search_term, queries$product_title))
 }
 
+Selectdescriptions<-function(numbers,des){
+  i<-1
+  j<-1
+  return<-list()
+  while(i<=length(numbers))
+  {
+    if(numbers[i]==des[j,1])
+    {
+      return[[toString(des[j,1])]] <- des[j,2]
+      i<-i+1
+    }
+    j<-j+1
+  }
+  return
+}
 
 
 ReadInfunc<- function(){
   tmpQueries<-read.csv(file="query_product.csv", row.names = 1, stringsAsFactors = FALSE)
   queries<<-tmpQueries[(tmpQueries$relevance)%%1==0,]
   
-  a<-sort(unique(queries$product_uid, FALSE))
-  tmpdescriptions<-read.csv(file="product_descriptions.csv", row.names = 1, stringsAsFactors = FALSE)
-  
+  a<<-sort(unique(queries$product_uid, FALSE))
+  tmpdescriptions<-read.csv(file="product_descriptions.csv", stringsAsFactors = FALSE)
+  descriptions<<-Selectdescriptions(a,tmpdescriptions)
 }
 
 
