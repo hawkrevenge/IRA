@@ -8,6 +8,9 @@ library("e1071") #heeft naive bayes functie kan handig zijn(?)
 #Alleen voor Lukas:
 #setwd("C:/Users/Lukas/Desktop/School/DATA/IRA/Prac 2")
 
+# idee 1: getallen matchen
+# idee 2: afkortingen matchen
+# idee 3: qf of idf ofz
 
 #heb werkelijk geen idee hoe we moeten beginnen tbh.
 Main<- function(){
@@ -24,7 +27,7 @@ Main<- function(){
   #werkelijk geen idee wat ik hier doe maar dit komt uit de slides
   #zit ook nog te denken hoe we dus gaan gokken
   #qp.dat<-data.frame(relevance=queries$relevance,allterms=allterms)
-  #tr.index<-sample(length(queries$search_term),50000)
+  #tr.index<-sample(length(queries$search_term),length(queries)*2/3)
   #qp.lm<-lm(relevance~allterms,data=qp.dat[tr.index,])
   #summary(qp.lm)
   alltermsdesc
@@ -68,10 +71,14 @@ test<-function(){
   summary(all.queryterms(queries$search_term, queries$product_title))
 }
 
+
+
 ReadInfunc<- function(){
-  descriptions<<-read.csv(file="product_descriptions.csv", row.names = 1, stringsAsFactors = FALSE)
   tmpQueries<-read.csv(file="query_product.csv", row.names = 1, stringsAsFactors = FALSE)
   queries<<-tmpQueries[(tmpQueries$relevance)%%1==0,]
+  
+  a<-sort(unique(queries$product_uid, FALSE))
+  tmpdescriptions<-read.csv(file="product_descriptions.csv", row.names = 1, stringsAsFactors = FALSE)
   
 }
 
