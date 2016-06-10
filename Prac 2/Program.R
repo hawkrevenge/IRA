@@ -23,7 +23,7 @@ Main<- function(){
   #werkelijk geen idee wat ik hier doe maar dit komt uit de slides
   #zit ook nog te denken hoe we dus gaan gokken
   qp.dat<-data.frame(relevance=queries$relevance,allterms=allterms)
-  tr.index<-sample(length(queries$search_term),50000)
+  tr.index<-sample(length(queries$search_term),length(queries)/3*2)
   qp.lm<-lm(relevance~allterms,data=qp.dat[tr.index,])
   summary(qp.lm)
 }
