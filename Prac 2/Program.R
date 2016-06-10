@@ -46,7 +46,7 @@ all.queryterms <- function (queries,docs)
   a<-sapply(queries, method="string",n=1L, textcnt)
   b<-sapply(sapply(docs, method="string",n=1L, textcnt), names)
   c<-mapply(intersect,sapply(a,names),b)
-  feature<- sapply((mapply(equallength,sapply(a,length),sapply(c,length))), as.numeric)
+  feature<- sapply((mapply(function(x,y){length(x)==length(y)},a,c)), as.numeric)
   feature
 }
 
