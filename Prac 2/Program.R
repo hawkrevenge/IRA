@@ -18,14 +18,16 @@ Main<- function(){
   #head(description)
   if(checkFunc())
     ReadInfunc()
-  allterms<- all.queryterms(queries$search_term,queries$product_title)
+  #allterms<- all.queryterms(queries$search_term,queries$product_title)
+  alltermsdesc <- all.querytermsdesc(queries$search_term, queries$product_uid, descriptions$product_uid, descriptions$product_description)
   
   #werkelijk geen idee wat ik hier doe maar dit komt uit de slides
   #zit ook nog te denken hoe we dus gaan gokken
-  qp.dat<-data.frame(relevance=queries$relevance,allterms=allterms)
-  tr.index<-sample(length(queries$search_term),50000)
-  qp.lm<-lm(relevance~allterms,data=qp.dat[tr.index,])
-  summary(qp.lm)
+  #qp.dat<-data.frame(relevance=queries$relevance,allterms=allterms)
+  #tr.index<-sample(length(queries$search_term),50000)
+  #qp.lm<-lm(relevance~allterms,data=qp.dat[tr.index,])
+  #summary(qp.lm)
+  alltermsdesc
 }
 
 readQueryProduct <- function() {
@@ -41,13 +43,24 @@ equallength<-function(x,y)
 }
 
 #kijken of alle woorden voorkomen in de titel(en ook geen anderen heeft)
-all.queryterms <- function (queries,docs)
+all.queryterms <- function (queries, docs)
 {
   a<-sapply(queries, method="string",n=1L, textcnt)
   b<-sapply(sapply(docs, method="string",n=1L, textcnt), names)
   c<-mapply(intersect,sapply(a,names),b)
   feature<- sapply((mapply(function(x,y){length(x)==length(y)},a,c)), as.numeric)
   feature
+}
+
+getProductDescFromQuery <- function(id) {
+  descriptions[toString(queries[toString(id), "product_uid"]),]
+}
+
+all.querytermsdesc <- function(queries, productid, descriptid, descript) {
+  a <- sapply(queries, method="string", n=1L, textcnt)
+  b <- sapply(productid, getProductDescFromQuery)
+
+  b
 }
 
 test<-function(){
