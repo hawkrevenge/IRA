@@ -28,6 +28,7 @@ Main<- function(){
   #qp.lm<-lm(relevance~allterms,data=qp.dat[tr.index,])
   #summary(qp.lm)
   alltermsdesc
+
 }
 
 readQueryProduct <- function() {
@@ -67,11 +68,13 @@ test<-function(){
   summary(all.queryterms(queries$search_term, queries$product_title))
 }
 
-
 ReadInfunc<- function(){
   descriptions<<-read.csv(file="product_descriptions.csv", row.names = 1, stringsAsFactors = FALSE)
-  queries<<-read.csv(file="query_product.csv", row.names = 1, stringsAsFactors = FALSE)
+  tmpQueries<-read.csv(file="query_product.csv", row.names = 1, stringsAsFactors = FALSE)
+  queries<<-tmpQueries[(tmpQueries$relevance)%%1==0,]
+  
 }
+
 
 checkFunc<-function(){
   !exists("queries")||!exists("descriptions")
