@@ -3,6 +3,7 @@ library("tau")
 library("tm")
 library("MASS")
 library("nnet")
+library("vecsets")
 library("e1071") #heeft naive bayes functie kan handig zijn(?)
 
 #Alleen voor Lukas:
@@ -67,6 +68,14 @@ all.querytermsdesc <- function(queries, productid, descriptid, descript) {
   b
 }
 
+numbers <- function(searchTerms, titles){
+  a<-mapply(regmatches,searchTerms,lapply(searchTerms,function(v){gregexpr("[0-9]+",v)}))
+  b<-mapply(regmatches,titles,lapply(titles,function(v){gregexpr("[0-9]+",v)}))
+  c<-mapply(vintersect,a,b)
+  feature<- sapply((mapply(function(x,y){if(length(x)>0){length(x)==length(y)}else FALSE},a,c)), as.numeric)
+  unname(feature)
+}
+
 test<-function(){
   summary(all.queryterms(queries$search_term, queries$product_title))
 }
@@ -92,7 +101,7 @@ ReadInfunc<- function(){
   tmpQueries<-read.csv(file="query_product.csv", row.names = 1, stringsAsFactors = FALSE)
   queries<<-tmpQueries[(tmpQueries$relevance)%%1==0,]
   
-  a<<-sort(unique(queries$product_uid, FALSE))
+  a<-sort(unique(queries$product_uid, FALSE))
   tmpdescriptions<-read.csv(file="product_descriptions.csv", stringsAsFactors = FALSE)
   descriptions<<-Selectdescriptions(a,tmpdescriptions)
 }
