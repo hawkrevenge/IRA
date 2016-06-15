@@ -9,7 +9,6 @@ library("e1071") #heeft naive bayes functie kan handig zijn(?)
 #setwd("C:/Users/Lukas/Desktop/School/DATA/IRA/Prac 2")
 
 
-#heb werkelijk geen idee hoe we moeten beginnen tbh.
 Main<- function(){
   #start het programma
   #readQueryProduct()
