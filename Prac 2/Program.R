@@ -53,8 +53,8 @@ all.queryterms <- function (queries, docs)
   a<-sapply(queries, method="string",n=1L, textcnt)
   b<-sapply(sapply(docs, method="string",n=1L, textcnt), names)
   c<-mapply(intersect,sapply(a,names),b)
-  feature<- sapply((mapply(function(x,y){length(x)==length(y)},a,c)), as.numeric)
-  feature
+  feature<- (mapply(function(x,y){if(length(x)>0 & length(y)>0){length(x)/length(y)}else {0}},c,a))
+  unname(feature)
 }
 
 getProductDescFromQuery <- function(id) {
@@ -72,7 +72,7 @@ numbers <- function(searchTerms, titles){
   a<-mapply(regmatches,searchTerms,lapply(searchTerms,function(v){gregexpr("[0-9]+",v)}))
   b<-mapply(regmatches,titles,lapply(titles,function(v){gregexpr("[0-9]+",v)}))
   c<-mapply(vintersect,a,b)
-  feature<- sapply((mapply(function(x,y){if(length(x)>0){length(x)==length(y)}else FALSE},a,c)), as.numeric)
+  feature<- (mapply(function(x,y){if(length(x)>0 & length(y)>0){length(x)/length(y)} else {0}},c,a))
   unname(feature)
 }
 
