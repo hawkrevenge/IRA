@@ -3,11 +3,15 @@ library("tau")
 library("tm")
 library("MASS")
 library("nnet")
+library("vecsets")
 library("e1071") #heeft naive bayes functie kan handig zijn(?)
 
 #Alleen voor Lukas:
 #setwd("C:/Users/Lukas/Desktop/School/DATA/IRA/Prac 2")
 
+# idee 1: getallen matchen
+# idee 2: afkortingen matchen
+# idee 3: qf of idf ofz
 
 Main<- function(){
   #start het programma
@@ -23,7 +27,7 @@ Main<- function(){
   #werkelijk geen idee wat ik hier doe maar dit komt uit de slides
   #zit ook nog te denken hoe we dus gaan gokken
   #qp.dat<-data.frame(relevance=queries$relevance,allterms=allterms)
-  #tr.index<-sample(length(queries$search_term),50000)
+  #tr.index<-sample(length(queries$search_term),length(queries)*2/3)
   #qp.lm<-lm(relevance~allterms,data=qp.dat[tr.index,])
   #summary(qp.lm)
   alltermsdesc
@@ -63,15 +67,42 @@ all.querytermsdesc <- function(queries, productid, descriptid, descript) {
   b
 }
 
+numbers <- function(searchTerms, titles){
+  a<-mapply(regmatches,searchTerms,lapply(searchTerms,function(v){gregexpr("[0-9]+",v)}))
+  b<-mapply(regmatches,titles,lapply(titles,function(v){gregexpr("[0-9]+",v)}))
+  c<-mapply(vintersect,a,b)
+  feature<- sapply((mapply(function(x,y){if(length(x)>0){length(x)==length(y)}else FALSE},a,c)), as.numeric)
+  unname(feature)
+}
+
 test<-function(){
   summary(all.queryterms(queries$search_term, queries$product_title))
 }
 
+Selectdescriptions<-function(numbers,des){
+  i<-1
+  j<-1
+  return<-list()
+  while(i<=length(numbers))
+  {
+    if(numbers[i]==des[j,1])
+    {
+      return[[toString(des[j,1])]] <- des[j,2]
+      i<-i+1
+    }
+    j<-j+1
+  }
+  return
+}
+
+
 ReadInfunc<- function(){
-  descriptions<<-read.csv(file="product_descriptions.csv", row.names = 1, stringsAsFactors = FALSE)
   tmpQueries<-read.csv(file="query_product.csv", row.names = 1, stringsAsFactors = FALSE)
   queries<<-tmpQueries[(tmpQueries$relevance)%%1==0,]
   
+  a<-sort(unique(queries$product_uid, FALSE))
+  tmpdescriptions<-read.csv(file="product_descriptions.csv", stringsAsFactors = FALSE)
+  descriptions<<-Selectdescriptions(a,tmpdescriptions)
 }
 
 
