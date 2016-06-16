@@ -4,6 +4,7 @@ library("tm")
 library("MASS")
 library("nnet")
 library("vecsets")
+library("dplyr")
 library("e1071") #heeft naive bayes functie kan handig zijn(?)
 
 #Alleen voor Lukas:
@@ -94,6 +95,39 @@ Selectdescriptions<-function(numbers,des){
     j<-j+1
   }
   return
+}
+
+orderamount<-function(st,tl){
+  l<-length(st)
+  l2<-length(tl)
+  i<-0
+  j<-1
+  c<-1
+  while(j<=l){
+    if(!(st[j] %in% tl)){
+      i<-i+1
+      }
+    j<-1+j
+    }
+  max<-0
+  matches<-match(tl,st)
+  while((i<l) &(c<=l2))
+  {
+    if(!is.na(matches[c]))
+    {
+      if(max<(l-matches[c]-i+1))
+      {
+        max<-(l-matches[c]-i+1)
+      }
+      i<-i+1
+    }
+    c<-c+1
+  }
+  max
+}
+#TODO string opsplitten
+orderfunc<-function(searchTerms, titles){
+  unname(mapply(orderamount, sapply(tolower(searchTerms), strsplit, "[[:space:][:punct:][:digit:]]+" ),sapply(tolower(titles),strsplit, "[[:space:][:punct:][:digit:]]+")))
 }
 
 
