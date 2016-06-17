@@ -12,7 +12,7 @@ library("e1071") #heeft naive bayes functie kan handig zijn(?)
 # idee 1: getallen matchen
 # idee 2: afkortingen matchen
 # idee 3: qf of idf ofz
-
+#lengte meter door spaties te tellen
 Main<- function(){
   #start het programma
   #readQueryProduct()
@@ -63,12 +63,32 @@ equallength<-function(x,y)
 {
   x==y
 }
+PluralToSingle<-function(x){
+  xstring<-x
+  if(substr(xstring,nchar(xstring)-2,nchar(xstring))=="ies"){
+    xstring<-paste0(substr(xstring,1,nchar(xstring)-3),"y")
+  }
+  else
+    if(substr(xstring,nchar(xstring),nchar(xstring))=="s")
+    {
+      xstring<-substr(xstring,1,nchar(xstring)-1)
+      if(substr(xstring,nchar(xstring),nchar(xstring))=="e")
+      {
+        xstring<-substring(xstring,1,nchar(xstring)-1)
+        if(substr(xstring,nchar(xstring),nchar(xstring))=="v")
+        {
+          xstring<-paste0(substring(xstring,1,nchar(xstring)-1),"f")
+        }
+      }
+    }
+  tolower(xstring)
+}
 
 #kijken of alle woorden voorkomen in de titel(en ook geen anderen heeft)
 all.queryterms <- function (queries, docs)
 {
-  a<-sapply(queries, method="string",n=1L, textcnt)
-  b<-sapply(sapply(docs, method="string",n=1L, textcnt), names)
+  a<-sapply(tolower(searchTerms), strsplit, "[[:space:][:punct:][:digit:]]+")
+  b<-tolower(docs)
   c<-mapply(intersect,sapply(a,names),b)
   feature<- (mapply(function(x,y){if(length(x)>0 & length(y)>0){length(x)/length(y)}else {0}},c,a))
   unname(feature)
@@ -88,9 +108,6 @@ numbers <- function(searchTerms, titles){
   unname(feature)
 }
 
-test<-function(){
-  summary(all.queryterms(queries$search_term, queries$product_title))
-}
 
 Selectdescriptions<-function(numbers,des){
   i<-1
@@ -136,7 +153,6 @@ orderamount<-function(st,tl){
   }
   max
 }
-#TODO string opsplitten
 orderfunc<-function(searchTerms, titles){
   unname(mapply(orderamount, sapply(tolower(searchTerms), strsplit, "[[:space:][:punct:][:digit:]]+" ),sapply(tolower(titles),strsplit, "[[:space:][:punct:][:digit:]]+")))
 }
