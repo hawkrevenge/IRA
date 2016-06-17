@@ -23,21 +23,24 @@ Main<- function(){
   if(checkFunc())
     ReadInfunc()
   
+  searchTerms <- queries$search_term
+  searchTermsNoDigits <- mapply(regmatches, searchTerms, lapply(searchTerms, function(v){gregexpr("[0-9]+", v)}))
+  searchTerms <- sapply(searchTermsNoDigits, strsplit, "[[:space:][:punct:][:digit:]]+")
   
   descriptionList = sapply(queries$product_uid, getProductDescFromQuery)
   
   print("start allterms")
-  allterms <- all.queryterms(queries$search_term,queries$product_title)
+  allterms <- all.queryterms(searchTerms,queries$product_title)
   print("start alltermsdesc")
-  alltermsdesc <- all.queryterms(queries$search_term, descriptionList)
+  alltermsdesc <- all.queryterms(searchTerms, descriptionList)
   print("start allnumbers")
-  allnumbers <- numbers(queries$search_term, queries$product_title)
+  allnumbers <- numbers(searchTerms, queries$product_title)
   print("start allnumbersdesc")
-  allnumbersdesc <- numbers(queries$search_term, descriptionList)
+  allnumbersdesc <- numbers(searchTerms, descriptionList)
   print("start allorders")
-  allorders <- orderfunc(queries$search_term,queries$product_title)
+  allorders <- orderfunc(searchTerms,queries$product_title)
   print("start allordersdesc")
-  allordersdesc <- orderfunc(queries$search_term, descriptionList)
+  allordersdesc <- orderfunc(searchTerms, descriptionList)
   
   frame <- data.frame(allterms, alltermsdesc, allnumbers, allnumbersdesc, allorders, allordersdesc, queries$relevance)
   m <<- polr(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc, data = frame, Hess=TRUE)
