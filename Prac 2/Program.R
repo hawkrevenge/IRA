@@ -87,7 +87,7 @@ PluralToSingle<-function(x){
 #kijken of alle woorden voorkomen in de titel(en ook geen anderen heeft)
 all.queryterms <- function (queries, docs)
 {
-  a<-sapply(tolower(searchTerms), strsplit, "[[:space:][:punct:][:digit:]]+" )
+  a<-sapply(sapply(queries, method="string",n=1L, textcnt), names)
   b<-sapply(sapply(docs, method="string",n=1L, textcnt), names)
   c<-mapply(intersect,sapply(a,names),b)
   feature<- (mapply(function(x,y){if(length(x)>0 & length(y)>0){length(x)/length(y)}else {0}},c,a))
