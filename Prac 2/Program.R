@@ -27,20 +27,26 @@ Main<- function(){
   searchTermsDigits <- mapply(regmatches, searchTerms, lapply(searchTerms, function(v){gregexpr("[0-9]+", v)}))
   searchTermsNoDigits <- sapply(sapply(searchTerms, strsplit, "[[:space:][:punct:][:digit:]]+"), PluralToSingle)
   
-  descriptionList = sapply(queries$product_uid, getProductDescFromQuery)
+  productTitles <- queries$product_title
+  productTitlesDigits <- mapply(regmatches, productTitles, lapply(productTitles, function(v){gregexpr("[0-9]+", v)}))
+  productTitlesNoDigits <- sapply(sapply(productTitles, strsplit, "[[:space:][:punct:][:digit:]]+"), PluralToSingle)
+  
+  ProductDescriptions <- sapply(queries$product_uid, getProductDescFromQuery)
+  ProductDescriptionsDigits <- mapply(regmatches, ProductDescriptions, lapply(ProductDescriptions, function(v){gregexpr("[0-9]+", v)}))
+  ProductDescriptionsNoDigits <- sapply(sapply(ProductDescriptions, strsplit, "[[:space:][:punct:][:digit:]]+"), PluralToSingle)
   
   print("start allterms")
-  allterms <- all.queryterms(searchTermsNoDigits,queries$product_title)
+  allterms <- all.queryterms(searchTermsNoDigits,productTitlesNoDigits)
   print("start alltermsdesc")
-  alltermsdesc <- all.queryterms(searchTermsNoDigits, descriptionList)
+  alltermsdesc <- all.queryterms(searchTermsNoDigits, ProductDescriptionsNoDigits)
   print("start allnumbers")
-  allnumbers <- numbers(searchTermsDigits, queries$product_title)
+  allnumbers <- numbers(searchTermsDigits, productTitlesDigits)
   print("start allnumbersdesc")
-  allnumbersdesc <- numbers(searchTermsDigits, descriptionList)
+  allnumbersdesc <- numbers(searchTermsDigits, ProductDescriptionsDigits)
   print("start allorders")
-  allorders <- orderfunc(searchTermsNoDigits,queries$product_title)
+  allorders <- orderfunc(searchTermsNoDigits,productTitlesNoDigits)
   print("start allordersdesc")
-  allordersdesc <- orderfunc(searchTermsNoDigits, descriptionList)
+  allordersdesc <- orderfunc(searchTermsNoDigits, ProductDescriptionsNoDigits)
   
   frame <- data.frame(allterms, alltermsdesc, allnumbers, allnumbersdesc, allorders, allordersdesc, queries$relevance)
   m <<- polr(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc, data = frame, Hess=TRUE)
