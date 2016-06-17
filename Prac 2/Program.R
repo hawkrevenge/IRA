@@ -24,23 +24,23 @@ Main<- function(){
     ReadInfunc()
   
   searchTerms <- queries$search_term
-  searchTermsNoDigits <- mapply(regmatches, searchTerms, lapply(searchTerms, function(v){gregexpr("[0-9]+", v)}))
-  searchTerms <- sapply(searchTermsNoDigits, strsplit, "[[:space:][:punct:][:digit:]]+")
+  searchTermsDigits <- mapply(regmatches, searchTerms, lapply(searchTerms, function(v){gregexpr("[0-9]+", v)}))
+  searchTermsNoDigits <- sapply(sapply(searchTerms, strsplit, "[[:space:][:punct:][:digit:]]+"), PluralToSingle)
   
   descriptionList = sapply(queries$product_uid, getProductDescFromQuery)
   
   print("start allterms")
-  allterms <- all.queryterms(searchTerms,queries$product_title)
+  allterms <- all.queryterms(searchTermsNoDigits,queries$product_title)
   print("start alltermsdesc")
-  alltermsdesc <- all.queryterms(searchTerms, descriptionList)
+  alltermsdesc <- all.queryterms(searchTermsNoDigits, descriptionList)
   print("start allnumbers")
-  allnumbers <- numbers(searchTerms, queries$product_title)
+  allnumbers <- numbers(searchTermsDigits, queries$product_title)
   print("start allnumbersdesc")
-  allnumbersdesc <- numbers(searchTerms, descriptionList)
+  allnumbersdesc <- numbers(searchTermsDigits, descriptionList)
   print("start allorders")
-  allorders <- orderfunc(searchTerms,queries$product_title)
+  allorders <- orderfunc(searchTermsNoDigits,queries$product_title)
   print("start allordersdesc")
-  allordersdesc <- orderfunc(searchTerms, descriptionList)
+  allordersdesc <- orderfunc(searchTermsNoDigits, descriptionList)
   
   frame <- data.frame(allterms, alltermsdesc, allnumbers, allnumbersdesc, allorders, allordersdesc, queries$relevance)
   m <<- polr(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc, data = frame, Hess=TRUE)
