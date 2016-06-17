@@ -18,9 +18,11 @@ Main<- function(){
   #readQueryProduct()
   
   
+  print("start reading")
   #head(description)
   if(checkFunc())
     ReadInfunc()
+  print("start alltermsdesc")
   #allterms<- all.queryterms(queries$search_term,queries$product_title)
   alltermsdesc <- all.querytermsdesc(queries$search_term, queries$product_uid, descriptions$product_uid, descriptions$product_description)
   
@@ -57,11 +59,16 @@ all.queryterms <- function (queries, docs)
 }
 
 getProductDescFromQuery <- function(id) {
-  descriptions[toString(queries[toString(id), "product_uid"]),]
+  stringId <- toString(id)
+  return <- unname(descriptions[stringId])[[1]]
+  return
 }
 
 all.querytermsdesc <- function(queries, productid, descriptid, descript) {
+  print("computing a")
   a <- sapply(queries, method="string", n=1L, textcnt)
+  print("computing b")
+  print(length(productid))
   b <- sapply(productid, getProductDescFromQuery)
 
   b
@@ -82,7 +89,7 @@ test<-function(){
 Selectdescriptions<-function(numbers,des){
   i<-1
   j<-1
-  return<-list()
+  return <- list()
   while(i<=length(numbers))
   {
     if(numbers[i]==des[j,1])
@@ -97,12 +104,13 @@ Selectdescriptions<-function(numbers,des){
 
 
 ReadInfunc<- function(){
-  tmpQueries<-read.csv(file="query_product.csv", row.names = 1, stringsAsFactors = FALSE)
+  tmpQueries<-read.csv(file="query_product_short.csv", stringsAsFactors = FALSE)
   queries<<-tmpQueries[(tmpQueries$relevance)%%1==0,]
   
   a<-sort(unique(queries$product_uid, FALSE))
   tmpdescriptions<-read.csv(file="product_descriptions.csv", stringsAsFactors = FALSE)
   descriptions<<-Selectdescriptions(a,tmpdescriptions)
+  print("done reading")
 }
 
 
