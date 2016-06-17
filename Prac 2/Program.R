@@ -104,10 +104,8 @@ getProductDescFromQuery <- function(id) {
 }
 
 numbers <- function(searchTerms, titles){
-  a<-mapply(regmatches,searchTerms,lapply(searchTerms,function(v){gregexpr("[0-9]+",v)}))
-  b<-mapply(regmatches,titles,lapply(titles,function(v){gregexpr("[0-9]+",v)}))
-  c<-mapply(vintersect,a,b)
-  feature<- (mapply(function(x,y){if(length(x)>0 & length(y)>0){length(x)/length(y)} else {0}},c,a))
+  c<-mapply(vintersect,searchTerms,titles)
+  feature<- (mapply(function(x,y){if(length(x)>0 & length(y)>0){length(x)/length(y)} else {0}},c,searchTerms))
   unname(feature)
 }
 
@@ -157,7 +155,7 @@ orderamount<-function(st,tl){
   max
 }
 orderfunc<-function(searchTerms, titles){
-  unname(mapply(orderamount, sapply(tolower(searchTerms), strsplit, "[[:space:][:punct:][:digit:]]+" ),sapply(tolower(titles),strsplit, "[[:space:][:punct:][:digit:]]+")))
+  unname(mapply(orderamount, searchTerms ,titles))
 }
 
 
