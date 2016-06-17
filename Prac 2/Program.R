@@ -4,7 +4,6 @@ library("tm")
 library("MASS")
 library("nnet")
 library("vecsets")
-library("dplyr")
 library("e1071") #heeft naive bayes functie kan handig zijn(?)
 
 #Alleen voor Lukas:
@@ -23,9 +22,25 @@ Main<- function(){
   #head(description)
   if(checkFunc())
     ReadInfunc()
+  
+  
+  descriptionList = sapply(queries$product_uid, getProductDescFromQuery)
+  
+  print("start allterms")
+  allterms <- all.queryterms(queries$search_term,queries$product_title)
   print("start alltermsdesc")
-  #allterms<- all.queryterms(queries$search_term,queries$product_title)
-  alltermsdesc <- all.querytermsdesc(queries$search_term, queries$product_uid, descriptions$product_uid, descriptions$product_description)
+  alltermsdesc <- all.queryterms(queries$search_term, descriptionList)
+  print("start allnumbers")
+  allnumbers <- numbers(queries$search_term, queries$product_title)
+  print("start allnumbersdesc")
+  allnumbersdesc <- numbers(queries$search_term, descriptionList)
+  print("start allorders")
+  allorders <- orderfunc(queries$search_term,queries$product_title)
+  print("start allordersdesc")
+  allordersdesc <- orderfunc(queries$search_term, descriptionList)
+  
+  frame <- data.frame(allterms, alltermsdesc, allnumbers, allnumbersdesc, allorders, allordersdesc, queries$relevance)
+  m <<- polr(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc, data = frame, Hess=TRUE)
   
   #werkelijk geen idee wat ik hier doe maar dit komt uit de slides
   #zit ook nog te denken hoe we dus gaan gokken
@@ -33,8 +48,8 @@ Main<- function(){
   #tr.index<-sample(length(queries$search_term),length(queries)*2/3)
   #qp.lm<-lm(relevance~allterms,data=qp.dat[tr.index,])
   #summary(qp.lm)
-  alltermsdesc
-
+  
+  summary(m)
 }
 
 readQueryProduct <- function() {
@@ -63,16 +78,6 @@ getProductDescFromQuery <- function(id) {
   stringId <- toString(id)
   return <- unname(descriptions[stringId])[[1]]
   return
-}
-
-all.querytermsdesc <- function(queries, productid, descriptid, descript) {
-  print("computing a")
-  a <- sapply(queries, method="string", n=1L, textcnt)
-  print("computing b")
-  print(length(productid))
-  b <- sapply(productid, getProductDescFromQuery)
-
-  b
 }
 
 numbers <- function(searchTerms, titles){
@@ -138,7 +143,7 @@ orderfunc<-function(searchTerms, titles){
 
 
 ReadInfunc<- function(){
-  tmpQueries<-read.csv(file="query_product_short.csv", stringsAsFactors = FALSE)
+  tmpQueries<-read.csv(file="query_product.csv", stringsAsFactors = FALSE)
   queries<<-tmpQueries[(tmpQueries$relevance)%%1==0,]
   
   a<-sort(unique(queries$product_uid, FALSE))
