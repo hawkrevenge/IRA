@@ -24,23 +24,23 @@ Main<- function(){
     ReadInfunc()
   
   searchTerms <- queries$search_term
-  searchTermsDigits <- mapply(regmatches, searchTerms, lapply(searchTerms, function(v){gregexpr("[0-9]+", v)}))
-  searchTermsNoDigits <- sapply(sapply(searchTerms, strsplit, "[[:space:][:punct:][:digit:]]+"), PluralToSingle)
+  searchTermsNoDigits <- mapply(regmatches, searchTerms, lapply(searchTerms, function(v){gregexpr("[0-9]+", v)}))
+  searchTerms <- sapply(searchTermsNoDigits, strsplit, "[[:space:][:punct:][:digit:]]+")
   
   descriptionList = sapply(queries$product_uid, getProductDescFromQuery)
   
   print("start allterms")
-  allterms <- all.queryterms(searchTermsNoDigits,queries$product_title)
+  allterms <- all.queryterms(searchTerms,queries$product_title)
   print("start alltermsdesc")
-  alltermsdesc <- all.queryterms(searchTermsNoDigits, descriptionList)
+  alltermsdesc <- all.queryterms(searchTerms, descriptionList)
   print("start allnumbers")
-  allnumbers <- numbers(searchTermsDigits, queries$product_title)
+  allnumbers <- numbers(searchTerms, queries$product_title)
   print("start allnumbersdesc")
-  allnumbersdesc <- numbers(searchTermsDigits, descriptionList)
+  allnumbersdesc <- numbers(searchTerms, descriptionList)
   print("start allorders")
-  allorders <- orderfunc(searchTermsNoDigits,queries$product_title)
+  allorders <- orderfunc(searchTerms,queries$product_title)
   print("start allordersdesc")
-  allordersdesc <- orderfunc(searchTermsNoDigits, descriptionList)
+  allordersdesc <- orderfunc(searchTerms, descriptionList)
   
   frame <- data.frame(allterms, alltermsdesc, allnumbers, allnumbersdesc, allorders, allordersdesc, queries$relevance)
   m <<- polr(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc, data = frame, Hess=TRUE)
@@ -68,22 +68,24 @@ equallength<-function(x,y)
 }
 PluralToSingle<-function(x){
   xstring<-x
-  if(substr(xstring,nchar(xstring)-2,nchar(xstring))=="ies"){
-    xstring<-paste0(substr(xstring,1,nchar(xstring)-3),"y")
-  }
-  else
-    if(substr(xstring,nchar(xstring),nchar(xstring))=="s")
-    {
-      xstring<-substr(xstring,1,nchar(xstring)-1)
-      if(substr(xstring,nchar(xstring),nchar(xstring))=="e")
+  if(nchar(xstring)>3){
+    if(substr(xstring,nchar(xstring)-2,nchar(xstring))=="ies"){
+      xstring<-paste0(substr(xstring,1,nchar(xstring)-3),"y")
+    }
+    else
+      if(substr(xstring,nchar(xstring),nchar(xstring))=="s")
       {
-        xstring<-substring(xstring,1,nchar(xstring)-1)
-        if(substr(xstring,nchar(xstring),nchar(xstring))=="v")
+        xstring<-substr(xstring,1,nchar(xstring)-1)
+        if(substr(xstring,nchar(xstring),nchar(xstring))=="e")
         {
-          xstring<-paste0(substring(xstring,1,nchar(xstring)-1),"f")
+          xstring<-substring(xstring,1,nchar(xstring)-1)
+          if(substr(xstring,nchar(xstring),nchar(xstring))=="v")
+          {
+            xstring<-paste0(substring(xstring,1,nchar(xstring)-1),"f")
+          }
         }
       }
-    }
+  }
   tolower(xstring)
 }
 
