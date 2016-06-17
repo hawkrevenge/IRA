@@ -24,8 +24,8 @@ Main<- function(){
     ReadInfunc()
   
   searchTerms <- queries$search_term
-  searchTermsNoDigits <- mapply(regmatches, searchTerms, lapply(searchTerms, function(v){gregexpr("[0-9]+", v)}))
-  searchTerms <- sapply(searchTermsNoDigits, strsplit, "[[:space:][:punct:][:digit:]]+")
+  searchTermsDigits <- mapply(regmatches, searchTerms, lapply(searchTerms, function(v){gregexpr("[0-9]+", v)}))
+  searchTermsNoDigits <- sapply(searchTerms, strsplit, "[[:space:][:punct:][:digit:]]+")
   
   productTitles <- queries$product_title
   productTitlesDigits <- mapply(regmatches, productTitles, lapply(productTitles, function(v){gregexpr("[0-9]+", v)}))
