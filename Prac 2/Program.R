@@ -24,16 +24,16 @@ Main<- function(){
     ReadInfunc()
   
   searchTerms <- queries$search_term
-  searchTermsNoDigits <- mapply(regmatches, searchTerms, lapply(searchTerms, function(v){gregexpr("[0-9]+", v)}))
-  searchTerms <- sapply(searchTermsNoDigits, strsplit, "[[:space:][:punct:][:digit:]]+")
+  searchTermsDigits <- mapply(regmatches, searchTerms, lapply(searchTerms, function(v){gregexpr("[0-9]+", v)}))
+  searchTermsNoDigits <- sapply(sapply(gsub("[[:punct:]]+", "",searchTerms), strsplit, "[[:space:][:punct:][:digit:]]+"),PluralToSingle)
   
   productTitles <- queries$product_title
   productTitlesDigits <- mapply(regmatches, productTitles, lapply(productTitles, function(v){gregexpr("[0-9]+", v)}))
-  productTitlesNoDigits <- sapply(sapply(productTitles, strsplit, "[[:space:][:punct:][:digit:]]+"), PluralToSingle)
+  productTitlesNoDigits <- sapply(sapply(gsub("[[:punct:]]+", "",productTitles), strsplit, "[[:space:][:punct:][:digit:]]+"), PluralToSingle)
   
   ProductDescriptions <- sapply(queries$product_uid, getProductDescFromQuery)
   ProductDescriptionsDigits <- mapply(regmatches, ProductDescriptions, lapply(ProductDescriptions, function(v){gregexpr("[0-9]+", v)}))
-  ProductDescriptionsNoDigits <- sapply(sapply(ProductDescriptions, strsplit, "[[:space:][:punct:][:digit:]]+"), PluralToSingle)
+  ProductDescriptionsNoDigits <- sapply(sapply(gsub("[[:punct:]]+", "",ProductDescriptions), strsplit, "[[:space:][:punct:][:digit:]]+"), PluralToSingle)
   
   print("start allterms")
 
@@ -163,7 +163,52 @@ orderamount<-function(st,tl){
   max
 }
 orderfunc<-function(searchTerms, titles){
-  unname(mapply(orderamount, searchTerms ,titles))
+  unname(mapply(orderamount, searchTerms, titles))
+}
+
+checkwords<-function(titles){
+  unname(sapply(sapply(titles, strsplit, "[[:alpha:][:punct:][:digit:]]+"),length))
+}
+abbreviationcheck<-function(st,tl){
+  abbcount<-1
+  return<-0
+  while(abbcount<=length(st)){
+    if(nchar(st[abbcount])<5)
+    {
+      word<-1
+      position<-1
+      first<-substring(st[abbcount],1,1)
+      now<-first
+      while(word+nchar(st[abbcount])-position<=length(tl)){
+        if(now==substr(tl[word],1,1)){
+          position<-position+1
+          now<-substr(st[abbcount],position,position)
+          if(position>nchar(st[abbcount])){
+            return<-1+return
+            break
+          }
+        }
+        else{
+          if(first==substr(tl[word],1,1)){
+            position<-2
+            now<-substr(st[abbcount],2,2)
+          }
+          else{
+            now<-first
+            position<-1
+          }
+        }
+        word<-word+1
+      }
+    }
+    abbcount<-abbcount+1
+  }
+  return
+}
+
+
+abbreviationFunc<-function(searchTerms,titles){
+  unname(mapply(afkortingencheck, searchTerm, titles))
 }
 
 
