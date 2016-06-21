@@ -165,7 +165,7 @@ orderamount<-function(st,tl){
 orderfunc<-function(searchTerms, titles){
   unname(mapply(orderamount, searchTerms, titles))
 }
-
+# gaat de volledige variant in
 checkwords<-function(titles){
   unname(sapply(sapply(titles, strsplit, "[[:alpha:][:punct:][:digit:]]+"),length))
 }
@@ -206,7 +206,7 @@ abbreviationcheck<-function(st,tl){
   return
 }
 
-
+#gaat de noDigitvariant in
 abbreviationFunc<-function(searchTerms,titles){
   unname(mapply(afkortingencheck, searchTerm, titles))
 }
