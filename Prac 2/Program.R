@@ -49,14 +49,16 @@ Main<- function(){
   allorders <- orderfunc(searchTermsNoDigits,productTitlesNoDigits)
   print("start allordersdesc")
   allordersdesc <- orderfunc(searchTermsNoDigits, ProductDescriptionsNoDigits)
-  
-  
+  print("start allabbreviations")
+  allabbr <- abbreviationcheck(searchTermsNoDigits,productTitlesNoDigits)
+  print("start allabbreviationsdesc")
+  allabbrdesc <- abbreviationcheck(searchTermsNoDigits,ProductDescriptionsNoDigits)
+  print("start alllengthsdesc")
+  lengthsdesc<-checkwords(ProductDescriptions)
   print("start allreverseterms")
   allreverseterms <- all.reversequeryterms(searchTermsNoDigits, ProductDescriptionsNoDigits)
-  print(allreverseterms)
-  
   frame <- data.frame(allterms, alltermsdesc, allnumbers, allnumbersdesc, allorders, allordersdesc, queries$relevance)
-  m <<- polr(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc + allreverseterms, data = frame, Hess=TRUE)
+  m <<- polr(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc + allabbr + allabbrdesc + lengthsdesc + allreverseterms, data = frame, Hess=TRUE)
   
   #werkelijk geen idee wat ik hier doe maar dit komt uit de slides
   #zit ook nog te denken hoe we dus gaan gokken
@@ -131,7 +133,7 @@ numbers <- function(searchTerms, titles){
   feature<- (mapply(function(x,y){if(length(x)>0 & length(y)>0){length(x)/length(y)} else {0}},c,searchTerms))
   unname(feature)
 }
-
+#3 4 7 
 
 Selectdescriptions<-function(numbers,des){
   i<-1
