@@ -50,9 +50,9 @@ Main<- function(){
   print("start allordersdesc")
   allordersdesc <- orderfunc(searchTermsNoDigits, ProductDescriptionsNoDigits)
   print("start allabbreviations")
-  allabbr <- abbreviationcheck(searchTermsNoDigits,productTitlesNoDigits)
+  allabbr <- abbreviationFunc(searchTermsNoDigits,productTitlesNoDigits)
   print("start allabbreviationsdesc")
-  allabbrdesc <- abbreviationcheck(searchTermsNoDigits,ProductDescriptionsNoDigits)
+  allabbrdesc <- abbreviationFunc(searchTermsNoDigits,ProductDescriptionsNoDigits)
   print("start alllengthsdesc")
   lengthsdesc<-checkwords(ProductDescriptions)
   print("start allreverseterms")
@@ -225,7 +225,7 @@ abbreviationcheck<-function(st,tl){
 
 #gaat de noDigitvariant in
 abbreviationFunc<-function(searchTerms,titles){
-  unname(mapply(afkortingencheck, searchTerm, titles))
+  unname(mapply(abbreviationcheck, searchTerm, titles))
 }
 
 tfidf <- function(queries, descriptions) {
