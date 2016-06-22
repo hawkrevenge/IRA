@@ -38,7 +38,6 @@ Main<- function(){
   
   print("start allterms")
   allterms <- all.queryterms(searchTermsNoDigits,productTitlesNoDigits)
-  print(allterms)
   print("start alltermsdesc")
   alltermsdesc <- all.queryterms(searchTermsNoDigits, ProductDescriptionsNoDigits)
   print("start allnumbers")
@@ -225,7 +224,7 @@ abbreviationcheck<-function(st,tl){
 
 #gaat de noDigitvariant in
 abbreviationFunc<-function(searchTerms,titles){
-  unname(mapply(abbreviationcheck, searchTerm, titles))
+  unname(mapply(abbreviationcheck, searchTerms, titles))
 }
 
 tfidf <- function(queries, descriptions) {
