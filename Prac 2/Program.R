@@ -24,8 +24,6 @@ Main<- function(){
   if(checkFunc())
     ReadInfunc()
   x<-length(queries$id)*2/3
-  testset<<-queries[((x+1):(length(queries$id))),]
-  queries<-queries[(1:x),]
   
   searchTerms <- queries$search_term
   searchTermsDigits <- mapply(regmatches, searchTerms, lapply(searchTerms, function(v){gregexpr("[0-9]+", v)}))
@@ -59,7 +57,12 @@ Main<- function(){
   lengthsdesc<-checkwords(ProductDescriptions)
   print("start allreverseterms")
   allreverseterms <- all.reversequeryterms(searchTermsNoDigits, ProductDescriptionsNoDigits)
-  frame <- data.frame(allterms, alltermsdesc, allnumbers, allnumbersdesc, allorders, allordersdesc, queries$relevance)
+  
+  frame <- data.frame(allterms, alltermsdesc, allnumbers, allnumbersdesc, allorders, allordersdesc, allabbr, allabbrdesc, lengthsdesc, allreverseterms, queries$relevance)
+  
+  testset<<-frame[((x+1):(length(queries$id))),]
+  frame<-frame[(1:x),]
+  
   m <<- polr(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc + allabbr + allabbrdesc + lengthsdesc + allreverseterms, data = frame, Hess=TRUE)
   
   #werkelijk geen idee wat ik hier doe maar dit komt uit de slides
@@ -72,6 +75,7 @@ Main<- function(){
   pred <- predict(m, testset)
   
   summary(m)
+  table(pred,testset$queries.relevance)
 }
 
 readQueryProduct <- function() {
