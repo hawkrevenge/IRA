@@ -22,9 +22,9 @@ Main<- function(){
   #head(description)
   if(checkFunc())
     ReadInfunc()
-  x<-length(searchTerms)*2/3
-  testset<-queries[x+1:length(queries)]
-  queries<-queries[1:x]
+  x<-length(queries$id)*2/3
+  testset<-queries[((x+1):(length(queries$id))),]
+  queries<-queries[(1:x),]
   searchTerms <- queries$search_term
   searchTermsDigits <- mapply(regmatches, searchTerms, lapply(searchTerms, function(v){gregexpr("[0-9]+", v)}))
   searchTermsNoDigits <- sapply(sapply(gsub("[[:punct:]]+", "",searchTerms), strsplit, "[[:space:][:punct:][:digit:]]+"),PluralToSingle)
