@@ -48,6 +48,12 @@ Main<- function(){
   allorders <- orderfunc(searchTermsNoDigits,productTitlesNoDigits)
   print("start allordersdesc")
   allordersdesc <- orderfunc(searchTermsNoDigits, ProductDescriptionsNoDigits)
+  print("start allabbreviations")
+  allabbr <- abbreviationcheck(searchTermsNoDigits,productTitlesNoDigits)
+  print("start allabbreviationsdesc")
+  allabbrdesc <- abbreviationcheck(searchTermsNoDigits,ProductDescriptionsNoDigits)
+  print("start alllengthsdesc")
+  lengthsdesc<-checkwords(ProductDescriptions)
   frame <- data.frame(allterms, alltermsdesc, allnumbers, allnumbersdesc, allorders, allordersdesc, queries$relevance)
   m <<- polr(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc, data = frame, Hess=TRUE)
   
@@ -100,7 +106,7 @@ all.queryterms <- function (queries, docs)
 {
   a<-sapply(sapply(queries, method="string",n=1L, textcnt), names)
   b<-sapply(sapply(docs, method="string",n=1L, textcnt), names)
-  c<-mapply(intersect,sapply(a,names),b)
+  c<-mapply(intersect,a,b)
   feature<- (mapply(function(x,y){if(length(x)>0 & length(y)>0){length(x)/length(y)}else {0}},c,a))
   unname(feature)
 }
@@ -116,7 +122,7 @@ numbers <- function(searchTerms, titles){
   feature<- (mapply(function(x,y){if(length(x)>0 & length(y)>0){length(x)/length(y)} else {0}},c,searchTerms))
   unname(feature)
 }
-
+#3 4 7 
 
 Selectdescriptions<-function(numbers,des){
   i<-1
