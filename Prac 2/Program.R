@@ -189,14 +189,14 @@ abbreviationcheck<-function(st,tl){
   abbcount<-1
   return<-0
   while(abbcount<=length(st)){
-    if(nchar(st[abbcount])<5)
+    if(nchar(st[abbcount])<5&nchar(st[abbcount])>1)
     {
       word<-1
       position<-1
       first<-substring(st[abbcount],1,1)
       now<-first
       while(word+nchar(st[abbcount])-position<=length(tl)){
-        if(now==substr(tl[word],1,1)){
+        if(now==substring(tl[word],1,1)){
           position<-position+1
           now<-substr(st[abbcount],position,position)
           if(position>nchar(st[abbcount])){
