@@ -24,8 +24,9 @@ Main<- function(){
   if(checkFunc())
     ReadInfunc()
   x<-length(queries$id)*2/3
-  testset<-queries[((x+1):(length(queries$id))),]
+  testset<<-queries[((x+1):(length(queries$id))),]
   queries<-queries[(1:x),]
+  
   searchTerms <- queries$search_term
   searchTermsDigits <- mapply(regmatches, searchTerms, lapply(searchTerms, function(v){gregexpr("[0-9]+", v)}))
   searchTermsNoDigits <- sapply(sapply(gsub("[[:punct:]]+", "",searchTerms), strsplit, "[[:space:][:punct:][:digit:]]+"),PluralToSingle)
@@ -67,6 +68,8 @@ Main<- function(){
   #tr.index<-sample(length(queries$search_term),length(queries)*2/3)
   #qp.lm<-lm(relevance~allterms,data=qp.dat[tr.index,])
   #summary(qp.lm)
+  
+  pred <- predict(m, testset)
   
   summary(m)
 }
