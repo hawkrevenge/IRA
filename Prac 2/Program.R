@@ -5,6 +5,7 @@ library("MASS")
 library("nnet")
 library("vecsets")
 library("e1071") #heeft naive bayes functie kan handig zijn(?)
+library("SnowballC")
 
 #Alleen voor Lukas:
 #setwd("C:/Users/Lukas/Desktop/School/DATA/IRA/Prac 2")
@@ -25,9 +26,7 @@ Main<- function(){
   
   searchTerms <- queries$search_term
   searchTermsDigits <- mapply(regmatches, searchTerms, lapply(searchTerms, function(v){gregexpr("[0-9]+", v)}))
-
-  #searchTermsNoDigits <- sapply(searchTerms, strsplit, "[[:space:][:punct:][:digit:]]+")
-  #searchTermsNoDigits <- sapply(sapply(gsub("[[:punct:]]+", "",searchTerms), strsplit, "[[:space:][:punct:][:digit:]]+"),PluralToSingle)
+  searchTermsNoDigits <- sapply(sapply(gsub("[[:punct:]]+", "",searchTerms), strsplit, "[[:space:][:punct:][:digit:]]+"),PluralToSingle)
   
   productTitles <- queries$product_title
   productTitlesDigits <- mapply(regmatches, productTitles, lapply(productTitles, function(v){gregexpr("[0-9]+", v)}))
@@ -38,8 +37,8 @@ Main<- function(){
   ProductDescriptionsNoDigits <- sapply(sapply(gsub("[[:punct:]]+", "",ProductDescriptions), strsplit, "[[:space:][:punct:][:digit:]]+"), PluralToSingle)
   
   print("start allterms")
-
   allterms <- all.queryterms(searchTermsNoDigits,productTitlesNoDigits)
+  print(allterms)
   print("start alltermsdesc")
   alltermsdesc <- all.queryterms(searchTermsNoDigits, ProductDescriptionsNoDigits)
   print("start allnumbers")
@@ -50,8 +49,14 @@ Main<- function(){
   allorders <- orderfunc(searchTermsNoDigits,productTitlesNoDigits)
   print("start allordersdesc")
   allordersdesc <- orderfunc(searchTermsNoDigits, ProductDescriptionsNoDigits)
+  
+  
+  print("start allreverseterms")
+  allreverseterms <- all.reversequeryterms(searchTermsNoDigits, ProductDescriptionsNoDigits)
+  print(allreverseterms)
+  
   frame <- data.frame(allterms, alltermsdesc, allnumbers, allnumbersdesc, allorders, allordersdesc, queries$relevance)
-  m <<- polr(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc, data = frame, Hess=TRUE)
+  m <<- polr(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc + allreverseterms, data = frame, Hess=TRUE)
   
   #werkelijk geen idee wat ik hier doe maar dit komt uit de slides
   #zit ook nog te denken hoe we dus gaan gokken
@@ -102,8 +107,16 @@ all.queryterms <- function (queries, docs)
 {
   a<-sapply(sapply(queries, method="string",n=1L, textcnt), names)
   b<-sapply(sapply(docs, method="string",n=1L, textcnt), names)
-  c<-mapply(intersect,sapply(a,names),b)
+  c<-mapply(intersect,a,b)
   feature<- (mapply(function(x,y){if(length(x)>0 & length(y)>0){length(x)/length(y)}else {0}},c,a))
+  unname(feature)
+}
+
+all.reversequeryterms <- function(queries, docs) {
+  a<-sapply(sapply(queries, method="string",n=1L, textcnt), names)
+  b<-sapply(sapply(docs, method="string",n=1L, textcnt), names)
+  c<-mapply(intersect,a,b)
+  feature<- (mapply(function(x,y){if(length(x)>0 & length(y)>0){length(x)/length(y)}else {0}},c,b))
   unname(feature)
 }
 
@@ -212,6 +225,17 @@ abbreviationcheck<-function(st,tl){
 abbreviationFunc<-function(searchTerms,titles){
   unname(mapply(afkortingencheck, searchTerm, titles))
 }
+
+tfidf <- function(queries, descriptions) {
+  corpus <- Corpus(VectorSource(descriptions))
+  corpus <- tm_map(corpus, stripWhitespace)
+  corpus <- tm_map(corpus, removePunctuation)
+  corpus <- tm_map(corpus, removeWords, stopwords("english"))
+  corpus <- tm_map(corpus, stemDocument, language="english")
+  terms <-DocumentTermMatrix(corpus, control = list(weighting = function(x) weightTfIdf(x, normalize = FALSE)))
+  #inspect(terms[1])
+}
+
 
 
 ReadInfunc<- function(){
