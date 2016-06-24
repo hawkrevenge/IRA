@@ -101,7 +101,7 @@ PluralToSingle<-function(x){
           xstring<-substring(xstring,1,nchar(xstring)-1)
           if(substr(xstring,nchar(xstring),nchar(xstring))=="v")
           {
-            xstring<-paste0(substring(xstring,1,nchar(xstring)-1),"f")
+            xstring<-paste0(substring(xstring,1,nchar(xstring)-1),"fe")
           }
         }
       }
