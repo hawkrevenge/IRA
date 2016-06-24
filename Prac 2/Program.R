@@ -63,19 +63,16 @@ Main<- function(){
   testset<<-frame[((x+1):(length(queries$id))),]
   frame<-frame[(1:x),]
   
-  m <<- polr(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc + allabbr + allabbrdesc + lengthsdesc + allreverseterms, data = frame, Hess=TRUE)
+  m1 <<- polr(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc + allabbr + allabbrdesc + lengthsdesc + allreverseterms, data = frame, Hess=TRUE)
+  m2 <<- multinom(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc + allabbr + allabbrdesc + lengthsdesc + allreverseterms, data = frame, Hess=TRUE)
   
-  #werkelijk geen idee wat ik hier doe maar dit komt uit de slides
-  #zit ook nog te denken hoe we dus gaan gokken
-  #qp.dat<-data.frame(relevance=queries$relevance,allterms=allterms)
-  #tr.index<-sample(length(queries$search_term),length(queries)*2/3)
-  #qp.lm<-lm(relevance~allterms,data=qp.dat[tr.index,])
-  #summary(qp.lm)
+  pred1 <- predict(m1, testset)
+  pred2 <- predict(m2, testset)
   
-  pred <- predict(m, testset)
-  
-  summary(m)
-  table(pred,testset$queries.relevance)
+  print(summary(m1))
+  print(summary(m2))
+  print(table(pred1,testset$queries.relevance))
+  print(table(pred2,testset$queries.relevance))
 }
 
 readQueryProduct <- function() {
