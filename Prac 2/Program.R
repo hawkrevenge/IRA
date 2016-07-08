@@ -6,21 +6,11 @@ library("nnet")
 library("vecsets")
 library("e1071") #heeft naive bayes functie kan handig zijn(?)
 library("SnowballC")
+library("hydroGOF")
 
-#Alleen voor Lukas:
-#setwd("C:/Users/Lukas/Desktop/School/DATA/IRA/Prac 2")
-
-# idee 1: getallen matchen
-# idee 2: afkortingen matchen
-# idee 3: qf of idf ofz
 #lengte meter door spaties te tellen
 Main<- function(){
-  #start het programma
-  #readQueryProduct()
-  
-  
   print("start reading")
-  #head(description)
   if(checkFunc())
     ReadInfunc()
   x<-length(queries$id)*2/3
@@ -63,16 +53,24 @@ Main<- function(){
   testset<<-frame[((x+1):(length(queries$id))),]
   frame<-frame[(1:x),]
   
+  m0 <<- lm(queries.relevance ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc + allabbr + allabbrdesc + lengthsdesc + allreverseterms, data = frame, Hess=TRUE)
   m1 <<- polr(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc + allabbr + allabbrdesc + lengthsdesc + allreverseterms, data = frame, Hess=TRUE)
   m2 <<- multinom(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc + allabbr + allabbrdesc + lengthsdesc + allreverseterms, data = frame, Hess=TRUE)
   
+  nullm0 <<- lm(queries.relevance ~ 1, data=frame)
+  nullm1 <<- polr(as.factor(queries.relevance) ~ 1, data=frame)
+  nullm2 <<- multinom(as.factor(queries.relevance) ~ 1, data=frame)
+  
+  pred0 <- predict(m0, testset)
   pred1 <- predict(m1, testset)
   pred2 <- predict(m2, testset)
   
-  print(summary(m1))
-  print(summary(m2))
-  print(table(pred1,testset$queries.relevance))
-  print(table(pred2,testset$queries.relevance))
+  #print(summary(m0))
+  #print(summary(m1))
+  #print(summary(m2))
+  #print(table(pred1,testset$queries.relevance))
+  #print(table(pred2,testset$queries.relevance))
+  #confusion matrix for lm does not work, as it guesses linear values (e.g 2.14) which will not coincide with real relevance values (1, 2 or 3)
 }
 
 readQueryProduct <- function() {
@@ -81,11 +79,6 @@ readQueryProduct <- function() {
   query_product.dat[query_product.dat[,1] == 9]
 }
 
-#functie om lengtes te vergelijken
-equallength<-function(x,y)
-{
-  x==y
-}
 PluralToSingle<-function(x){
   xstring<-x
   if(nchar(xstring)>3){
@@ -138,7 +131,6 @@ numbers <- function(searchTerms, titles){
   feature<- (mapply(function(x,y){if(length(x)>0 & length(y)>0){length(x)/length(y)} else {0}},c,searchTerms))
   unname(feature)
 }
-#3 4 7 
 
 Selectdescriptions<-function(numbers,des){
   i<-1
@@ -187,10 +179,12 @@ orderamount<-function(st,tl){
 orderfunc<-function(searchTerms, titles){
   unname(mapply(orderamount, searchTerms, titles))
 }
+
 # gaat de volledige variant in
 checkwords<-function(titles){
   unname(sapply(sapply(titles, strsplit, "[[:alpha:][:punct:][:digit:]]+"),length))
 }
+
 abbreviationcheck<-function(st,tl){
   abbcount<-1
   return<-0
@@ -233,21 +227,10 @@ abbreviationFunc<-function(searchTerms,titles){
   unname(mapply(abbreviationcheck, searchTerms, titles))
 }
 
-tfidf <- function(queries, descriptions) {
-  corpus <- Corpus(VectorSource(descriptions))
-  corpus <- tm_map(corpus, stripWhitespace)
-  corpus <- tm_map(corpus, removePunctuation)
-  corpus <- tm_map(corpus, removeWords, stopwords("english"))
-  corpus <- tm_map(corpus, stemDocument, language="english")
-  terms <-DocumentTermMatrix(corpus, control = list(weighting = function(x) weightTfIdf(x, normalize = FALSE)))
-  #inspect(terms[1])
-}
-
-
-
 ReadInfunc<- function(){
   tmpQueries<-read.csv(file="query_product.csv", stringsAsFactors = FALSE)
   queries<<-tmpQueries[(tmpQueries$relevance)%%1==0,]
+  #queries <<-tmpQueries
   
   a<-sort(unique(queries$product_uid, FALSE))
   tmpdescriptions<-read.csv(file="product_descriptions.csv", stringsAsFactors = FALSE)
