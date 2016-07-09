@@ -51,19 +51,56 @@ Main<- function(){
   frame <- data.frame(allterms, alltermsdesc, allnumbers, allnumbersdesc, allorders, allordersdesc, allabbr, allabbrdesc, lengthsdesc, allreverseterms, queries$relevance)
   
   testset<<-frame[((x+1):(length(queries$id))),]
-  frame<-frame[(1:x),]
+  frame2 <<-frame[(1:x),]
   
-  m0 <<- lm(queries.relevance ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc + allabbr + allabbrdesc + lengthsdesc + allreverseterms, data = frame, Hess=TRUE)
-  m1 <<- polr(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc + allabbr + allabbrdesc + lengthsdesc + allreverseterms, data = frame, Hess=TRUE)
-  m2 <<- multinom(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc + allabbr + allabbrdesc + lengthsdesc + allreverseterms, data = frame, Hess=TRUE)
+  m0 <<- lm(queries.relevance ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc + allabbr + allabbrdesc + lengthsdesc + allreverseterms, data = frame2)
+  m1 <<- polr(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc + allabbr + allabbrdesc + lengthsdesc + allreverseterms, data = frame2)
+  m2 <<- multinom(as.factor(queries.relevance) ~ allterms + alltermsdesc + allnumbers + allnumbersdesc + allorders + allordersdesc + allabbr + allabbrdesc + lengthsdesc + allreverseterms, data = frame2)
   
-  nullm0 <<- lm(queries.relevance ~ 1, data=frame)
-  nullm1 <<- polr(as.factor(queries.relevance) ~ 1, data=frame)
-  nullm2 <<- multinom(as.factor(queries.relevance) ~ 1, data=frame)
+  newm0 <<- lm(formula = queries.relevance ~ allterms + alltermsdesc + allorders +
+                 allreverseterms + allabbrdesc + allnumbers + allnumbersdesc +
+                 allordersdesc + allterms:allorders + allterms:alltermsdesc +
+                 alltermsdesc:allreverseterms + allnumbers:allnumbersdesc +
+                 allorders:allreverseterms + allterms:allreverseterms + allreverseterms:allnumbers +
+                 alltermsdesc:allorders + allabbrdesc:allnumbers + allorders:allordersdesc +
+                 alltermsdesc:allordersdesc + allabbrdesc:allordersdesc +
+                 allnumbers:allordersdesc + alltermsdesc:allnumbers + alltermsdesc:allnumbersdesc +
+                 allreverseterms:allnumbersdesc + allterms:allordersdesc +
+                 allreverseterms:allabbrdesc, data = frame2)
   
-  pred0 <- predict(m0, testset)
-  pred1 <- predict(m1, testset)
-  pred2 <- predict(m2, testset)
+  newm1 <<- polr(formula = as.factor(queries.relevance) ~ allterms + alltermsdesc +
+                   allreverseterms + allorders + allabbrdesc + allnumbers +
+                   allnumbersdesc + lengthsdesc + allordersdesc + alltermsdesc:allreverseterms +
+                   allterms:allorders + allterms:alltermsdesc + allnumbers:allnumbersdesc +
+                   allreverseterms:lengthsdesc + alltermsdesc:allordersdesc +
+                   allorders:allordersdesc + alltermsdesc:allnumbers + alltermsdesc:allorders +
+                   alltermsdesc:allnumbersdesc + allabbrdesc:allordersdesc +
+                   allnumbers:lengthsdesc + allreverseterms:allnumbersdesc +
+                   allreverseterms:allorders + allorders:allnumbersdesc + allreverseterms:allabbrdesc +
+                   allterms:allnumbers, data = frame2)
+  
+  
+  newm2 <<- multinom(formula = as.factor(queries.relevance) ~ allterms + 
+                           alltermsdesc + allreverseterms + allorders + lengthsdesc + 
+                           allnumbers + allnumbersdesc + allordersdesc + allabbrdesc + 
+                           alltermsdesc:allreverseterms + allterms:allorders + allreverseterms:lengthsdesc + 
+                           allterms:alltermsdesc + allnumbers:allnumbersdesc + alltermsdesc:allorders + 
+                           allreverseterms:allorders + allreverseterms:allnumbers + 
+                           lengthsdesc:allnumbers + alltermsdesc:allordersdesc + allnumbersdesc:allordersdesc + 
+                           allorders:allordersdesc + allterms:allnumbers + alltermsdesc:lengthsdesc + 
+                           allordersdesc:allabbrdesc + allorders:allnumbers + allterms:allreverseterms + 
+                           allterms:allordersdesc + allnumbersdesc:allabbrdesc + allorders:allabbrdesc, 
+                         data = frame2)
+  
+  nullm0 <<- lm(queries.relevance ~ 1, data=frame2)
+  nullm1 <<- polr(as.factor(queries.relevance) ~ 1, data=frame2)
+  nullm2 <<- multinom(as.factor(queries.relevance) ~ 1, data=frame2)
+  
+  pred0 <<- predict(newm0, testset)
+  pred1 <<- predict(newm1, testset)
+  pred2 <<- predict(newm2, testset)
+  
+  #step(nullm0, scope=list(lower=nullm0, upper=m0), direction="forward")
   
   #print(summary(m0))
   #print(summary(m1))
